@@ -2,56 +2,75 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Define public routes that don't require authentication
+const publicRoutes = ['/', '/sign-in', '/sign-up', '/privacy', '/terms', '/not-found'];
+
+// Define static routes that should bypass middleware
+const staticRoutes = [
+  '/_next',
+  '/static',
+  '/api',
+  '/favicon.ico',
+  '/manifest.json',
+  '/robots.txt',
+  '/sitemap.xml'
+];
+
+// Helper function to check if path should bypass middleware
+function shouldBypassMiddleware(pathname: string): boolean {
+  return staticRoutes.some(route => pathname.startsWith(route));
+}
+
 export async function middleware(request: NextRequest) {
   try {
-    // Skip middleware for static files, API routes, and special pages
-    if (
-      request.nextUrl.pathname.startsWith('/_next') ||
-      request.nextUrl.pathname.startsWith('/static') ||
-      request.nextUrl.pathname.startsWith('/api') ||
-      request.nextUrl.pathname === '/_not-found' ||
-      request.nextUrl.pathname === '/not-found' ||
-      request.nextUrl.pathname === '/favicon.ico' ||
-      request.nextUrl.pathname.startsWith('/_not-found/')
-    ) {
+    const { pathname } = request.nextUrl;
+
+    // Skip middleware for static files and API routes
+    if (shouldBypassMiddleware(pathname)) {
       return NextResponse.next();
     }
 
+    // Create response and Supabase client
     const res = NextResponse.next();
     const supabase = createMiddlewareClient({ req: request, res });
     
+    // Check session
     const {
       data: { session },
+      error: sessionError
     } = await supabase.auth.getSession();
 
-    // Allow access to public routes
-    if (
-      request.nextUrl.pathname === '/' ||
-      request.nextUrl.pathname.startsWith('/sign-in') ||
-      request.nextUrl.pathname.startsWith('/sign-up')
-    ) {
-      return res;
-    }
-
-    // Redirect to sign-in if not authenticated
-    if (!session) {
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      // On session error, redirect to sign-in
       const signInUrl = new URL('/sign-in', request.url);
       return NextResponse.redirect(signInUrl);
     }
 
-    // Handle dashboard route
-    if (request.nextUrl.pathname === '/dashboard') {
-      if (!session) {
-        const signInUrl = new URL('/sign-in', request.url);
-        return NextResponse.redirect(signInUrl);
+    // Allow access to public routes
+    if (publicRoutes.includes(pathname)) {
+      // If user is logged in and trying to access auth pages, redirect to dashboard
+      if (session && (pathname === '/sign-in' || pathname === '/sign-up')) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
       }
       return res;
     }
 
+    // Handle protected routes
+    if (!session) {
+      // Store the original URL to redirect back after sign in
+      const signInUrl = new URL('/sign-in', request.url);
+      signInUrl.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    // User is authenticated, allow access to protected routes
     return res;
   } catch (error) {
     console.error('Middleware error:', error);
-    return NextResponse.next();
+    // On critical error, redirect to sign-in
+    const signInUrl = new URL('/sign-in', request.url);
+    return NextResponse.redirect(signInUrl);
   }
 }
 
@@ -62,9 +81,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
-     * - _not-found (not found page)
+     * - public files (robots.txt, manifest.json, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|_not-found).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|manifest.json|sitemap.xml).*)',
   ],
 }; 
