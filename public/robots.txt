@@ -1,0 +1,18 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://heartsync.app/sitemap.xml
+
+# Disallow private routes
+Disallow: /auth/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Crawl-delay for rate limiting
+Crawl-delay: 10
+
+# Host directive
+Host: https://heartsync.app 
