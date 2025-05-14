@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { CalendarDays, CheckCircle2, Clock, Share2, StickyNote, Menu } from "lucide-react"
+import { CalendarDays, CheckCircle2, Clock, Share2, StickyNote } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { TextAnimate } from "@/components/magicui/text-animate";
