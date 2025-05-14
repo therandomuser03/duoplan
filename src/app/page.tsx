@@ -1,5 +1,5 @@
 import Link from "next/link"
-import Image from "next/image"
+// import Image from "next/image"
 import { CalendarDays, CheckCircle2, Clock, Share2, StickyNote } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -141,14 +141,14 @@ export default function LandingPage() {
             
             {/* App Preview Image */}
             <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl lg:flex-shrink-0">
-              <Image
+              {/* <Image
                 src="/placeholder.svg?height=600&width=800"
                 width={800}
                 height={600}
                 alt="DuoPlan App Interface"
                 className="w-full"
                 priority
-              />
+              /> */}
             </div>
           </div>
         </div>
