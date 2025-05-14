@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
             attribute="class"
@@ -32,8 +32,8 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-          </ThemeProvider>
         {children}
+          </ThemeProvider>
       </body>
     </html>
   );

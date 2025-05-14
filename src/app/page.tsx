@@ -2,59 +2,101 @@ import Link from "next/link"
 import Image from "next/image"
 import { CalendarDays, CheckCircle2, Clock, Share2, StickyNote, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-// import { LandingHeader } from "@/components/landing-header"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { TextAnimate } from "@/components/magicui/text-animate";
+import { cn } from "@/lib/utils";
+import { Marquee } from "@/components/magicui/marquee";
+ 
+const reviews = [
+  {
+    name: "Ava Martinez",
+    username: "@ava_m",
+    body: "My partner and I finally stopped arguing over missed appointments. DuoPlan just works — clean, simple, and honestly a relationship saver.",
+    img: "https://avatar.vercel.sh/ava",
+  },
+  {
+    name: "Ethan Clarke",
+    username: "@ethan.clarke",
+    body: "I’ve tried a lot of shared calendars, but this one actually fits into our daily routine without being overwhelming. Highly recommend.",
+    img: "https://avatar.vercel.sh/ethan",
+  },
+  {
+    name: "Lena Kim",
+    username: "@lenakim",
+    body: "The ability to add notes to events is a game-changer. We plan trips, groceries, even small reminders together now.",
+    img: "https://avatar.vercel.sh/lena",
+  },
+  {
+    name: "Marcus Grant",
+    username: "@marcus_g",
+    body: "We’ve been using DuoPlan for 3 months and haven’t double-booked once. It’s the little things that make it feel designed for two.",
+    img: "https://avatar.vercel.sh/marcus",
+  },
+  {
+    name: "Nina Alvarez",
+    username: "@nina.alvarez",
+    body: "Minimalist but powerful. Syncs instantly across our phones and helps us stay on the same page — literally and figuratively.",
+    img: "https://avatar.vercel.sh/nina",
+  },
+  {
+    name: "Sam Patel",
+    username: "@sampatel",
+    body: "It’s not just a calendar. It’s become our shared space for everything from dentist appointments to weekend plans. Super intuitive.",
+    img: "https://avatar.vercel.sh/sam",
+  },
+];
+
+ 
+const firstRow = reviews.slice(0, reviews.length);
+ 
+const ReviewCard = ({
+  img,
+  name,
+  username,
+  body,
+}: {
+  img: string;
+  name: string;
+  username: string;
+  body: string;
+}) => {
+  return (
+    <figure
+      className={cn(
+        "relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4",
+        // light styles
+        "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
+        // dark styles
+        "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
+      )}
+    >
+      <div className="flex flex-row items-center gap-2">
+        <img className="rounded-full" width="32" height="32" alt="" src={img} />
+        <div className="flex flex-col">
+          <figcaption className="text-sm font-medium dark:text-white">
+            {name}
+          </figcaption>
+          <p className="text-xs font-medium dark:text-white/40">{username}</p>
+        </div>
+      </div>
+      <blockquote className="mt-2 text-sm">{body}</blockquote>
+    </figure>
+  );
+};
 
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* <LandingHeader /> */}
-
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm lg:px-6">
         <div className="flex items-center gap-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 sm:max-w-sm">
-              <div className="py-4">
-                <div className="flex items-center gap-2 px-4 py-2">
-                  <CalendarDays className="h-5 w-5" />
-                  <span className="text-lg font-semibold">DuoPlan</span>
-                </div>
-                <nav className="mt-6 flex flex-col gap-1 px-2">
-                  <Link
-                    href="#features"
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
-                  >
-                    Features
-                  </Link>
-                  <Link
-                    href="#"
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
-                  >
-                    Pricing
-                  </Link>
-                  <Link
-                    href="#"
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
-                  >
-                    About
-                  </Link>
-                </nav>
-              </div>
-            </SheetContent>
-          </Sheet>
+          
           <Link href="/" className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
             <span className="text-lg font-semibold">DuoPlan</span>
           </Link>
         </div>
-        <nav className="hidden gap-6 md:flex">
+        {/* <nav className="hidden gap-6 md:flex">
           <Link href="#features" className="text-sm font-medium transition-colors hover:text-primary">
             Features
           </Link>
@@ -64,7 +106,7 @@ export default function LandingPage() {
           <Link href="#" className="text-sm font-medium transition-colors hover:text-primary">
             About
           </Link>
-        </nav>
+        </nav> */}
         <div className="flex items-center gap-2">
           <ModeToggle />
           <Button asChild variant="outline" className="hidden sm:flex">
@@ -75,24 +117,26 @@ export default function LandingPage() {
 
       {/* Hero Section with App Preview */}
       <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-start lg:justify-between">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-between">
             {/* Hero Text Content */}
-            <div className="max-w-xl text-center lg:text-left">
+            <div className="pb-10 text-center lg:text-left">
               <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-                Plan Together, <span className="text-primary">Stay in Sync</span>
+              <TextAnimate animation="blurInUp" by="character" once>
+                Plan Together, Stay in Sync
+              </TextAnimate>
               </h1>
               <p className="mb-10 text-xl text-muted-foreground">
-                DuoPlan is a minimalist shared calendar and note-taking app designed for couples and partners to coordinate
-                their schedules effortlessly.
+              DuoPlan is a minimalist shared calendar and note-taking app designed for couples and partners to coordinate
+              their schedules effortlessly.
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
-                <Button asChild size="lg" className="px-8">
-                  <Link href="/dashboard">Get Started</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="#features">Learn More</Link>
-                </Button>
+              <Button asChild size="lg" className="px-8">
+                <Link href="/dashboard">Get Started</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="#features">Learn More</Link>
+              </Button>
               </div>
             </div>
             
@@ -102,7 +146,7 @@ export default function LandingPage() {
                 src="/placeholder.svg?height=600&width=800"
                 width={800}
                 height={600}
-                alt="DuoPlan Calendar Interface"
+                alt="DuoPlan App Interface"
                 className="w-full"
                 priority
               />
@@ -151,25 +195,21 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-muted/40 py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">What Users Say</h2>
-          <div className="mx-auto max-w-6xl grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <TestimonialCard
-              quote="DuoPlan has been a game-changer for coordinating our busy schedules. We never miss important dates anymore!"
-              author="Alex & Jordan"
-            />
-            <TestimonialCard
-              quote="The clean design is exactly what we were looking for. No unnecessary features, just what we need to stay organized."
-              author="Taylor & Casey"
-            />
-            <TestimonialCard
-              quote="Being able to attach notes to calendar events has made planning trips and appointments so much easier."
-              author="Morgan & Riley"
-            />
-          </div>
-        </div>
-      </section>
+<section className="bg-muted/40 py-20">
+  <div className="container mx-auto px-4">
+    <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">What Users Say</h2>
+    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
+      <Marquee pauseOnHover className="[--duration:20s]">
+        {firstRow.map((review) => (
+          <ReviewCard key={review.username} {...review} />
+        ))}
+      </Marquee>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background" />
+    </div>
+  </div>
+</section>
+
 
       {/* CTA Section */}
       <section className="py-20">
@@ -219,17 +259,3 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
   )
 }
 
-interface TestimonialCardProps {
-  quote: string;
-  author: string;
-}
-
-function TestimonialCard({ quote, author }: TestimonialCardProps) {
-  return (
-    <div className="flex flex-col rounded-lg border bg-background p-6 shadow-sm">
-      <div className="mb-4 text-4xl">"</div>
-      <p className="mb-4 flex-1 italic text-muted-foreground">{quote}</p>
-      <p className="font-medium">— {author}</p>
-    </div>
-  )
-}
