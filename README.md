@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DuoPlan
+
+DuoPlan is a collaborative planner designed for couples, helping them stay in sync with shared calendars, notes, and real-time updates.
+
+## Features
+
+- **Shared Calendar**: Keep schedules in sync with real-time updates across devices
+- **Integrated Notes**: Attach notes to events or keep standalone shared notes
+- **Partner System**: Connect with your partner to share calendars and plans
+- **Real-time Updates**: See changes instantly when your partner modifies events
+- **Modern UI**: Clean, minimalist interface with dark mode support
+- **Multiple Views**: Day, week, and month calendar views
+
+## Tech Stack
+
+- **Frontend**: Next.js (App Router), React
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Database**: Supabase
+- **Authentication**: Supabase Auth
+- **State Management**: React Hooks
+- **Animations**: Framer Motion
+- **Calendar**: React Big Calendar
+- **Icons**: Lucide React
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18.0 or later
+- npm or yarn
+- Supabase account
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/duoplan.git
+   cd duoplan
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory with the following variables:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+### Database Setup
+
+1. Create a new Supabase project
+2. Connect to your project using the "Connect to Supabase" button
+3. The database schema will be automatically created
+
+## Project Structure
+
+```
+duoplan/
+├── app/                   # Next.js App Router pages
+│   ├── auth/              # Authentication pages
+│   ├── dashboard/         # Dashboard and features
+│   └── page.tsx           # Landing page
+├── components/            # Reusable components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility functions
+├── types/                 # TypeScript types
+└── public/                # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features in Detail
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Authentication
+- Email/password authentication
+- Protected routes
+- User profile management
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Calendar
+- Shared calendar events
+- Multiple view options
+- Real-time updates
+- Event details and notes
 
-## Learn More
+### Notes
+- Shared notes system
+- Rich text support
+- Real-time collaboration
+- Categorization
 
-To learn more about Next.js, take a look at the following resources:
+### Partner System
+- Partner invitations
+- Shared access management
+- Real-time synchronization
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Deploy on Vercel
+## Acknowledgments
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.io/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Framer Motion](https://www.framer.com/motion/)
+- [React Big Calendar](https://github.com/jquense/react-big-calendar)
