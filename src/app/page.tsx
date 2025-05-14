@@ -1,12 +1,29 @@
-import Link from "next/link"
+"use client";
+
+import Link from "next/link";
 // import Image from "next/image"
-import { CalendarDays, CheckCircle2, Clock, Share2, StickyNote } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/mode-toggle"
+import {
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Share2,
+  StickyNote,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
 import { TextAnimate } from "@/components/magicui/text-animate";
 import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/magicui/marquee";
- 
+import {
+  SignInButton,
+  SignUpButton,
+  SignedOut,
+} from "@clerk/nextjs";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+
+
 const reviews = [
   {
     name: "Ava Martinez",
@@ -46,9 +63,8 @@ const reviews = [
   },
 ];
 
- 
 const firstRow = reviews.slice(0, reviews.length);
- 
+
 const ReviewCard = ({
   img,
   name,
@@ -67,7 +83,7 @@ const ReviewCard = ({
         // light styles
         "border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]",
         // dark styles
-        "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]",
+        "dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]"
       )}
     >
       <div className="flex flex-row items-center gap-2">
@@ -85,32 +101,33 @@ const ReviewCard = ({
 };
 
 export default function LandingPage() {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isSignedIn) {
+      router.push("/dashboard");
+    }
+  }, [isSignedIn, router]);
+  
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm lg:px-6">
         <div className="flex items-center gap-2">
-          
           <Link href="/" className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
             <span className="text-lg font-semibold">DuoPlan</span>
           </Link>
         </div>
-        {/* <nav className="hidden gap-6 md:flex">
-          <Link href="#features" className="text-sm font-medium transition-colors hover:text-primary">
-            Features
-          </Link>
-          <Link href="#" className="text-sm font-medium transition-colors hover:text-primary">
-            Pricing
-          </Link>
-          <Link href="#" className="text-sm font-medium transition-colors hover:text-primary">
-            About
-          </Link>
-        </nav> */}
         <div className="flex items-center gap-2">
           <ModeToggle />
-          <Button asChild variant="outline" className="hidden sm:flex">
-            <Link href="/login">Log In</Link>
-          </Button>
+            <SignedOut>
+  <SignInButton mode="modal">
+    <Button variant="outline" className="hidden sm:flex">
+      Log In
+    </Button>
+  </SignInButton>
+</SignedOut>
         </div>
       </header>
 
@@ -121,35 +138,30 @@ export default function LandingPage() {
             {/* Hero Text Content */}
             <div className="pb-10 text-center lg:text-left">
               <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              <TextAnimate animation="blurInUp" by="character" once>
-                Plan Together, Stay in Sync
-              </TextAnimate>
+                <TextAnimate animation="blurInUp" by="character" once>
+                  Plan Together, Stay in Sync
+                </TextAnimate>
               </h1>
               <p className="mb-10 text-xl text-muted-foreground">
-              DuoPlan is a minimalist shared calendar and note-taking app designed for couples and partners to coordinate
-              their schedules effortlessly.
+                DuoPlan is a minimalist shared calendar and note-taking app
+                designed for couples and partners to coordinate their schedules
+                effortlessly.
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
-              <Button asChild size="lg" className="px-8">
-                <Link href="/dashboard">Get Started</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="#features">Learn More</Link>
-              </Button>
+                <SignUpButton mode="modal">
+      <Button size="lg" className="px-8">Get Started</Button>
+    </SignUpButton>
+
+
+
+                <Button asChild variant="outline" size="lg">
+                  <Link href="#features">Learn More</Link>
+                </Button>
               </div>
             </div>
-            
+
             {/* App Preview Image */}
-            <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl lg:flex-shrink-0">
-              {/* <Image
-                src="/placeholder.svg?height=600&width=800"
-                width={800}
-                height={600}
-                alt="DuoPlan App Interface"
-                className="w-full"
-                priority
-              /> */}
-            </div>
+            <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl lg:flex-shrink-0"></div>
           </div>
         </div>
       </section>
@@ -157,7 +169,9 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" className="py-20">
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">Key Features</h2>
+          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">
+            Key Features
+          </h2>
           <div className="mx-auto max-w-6xl grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <FeatureCard
               icon={<CalendarDays className="h-10 w-10 text-primary" />}
@@ -194,28 +208,32 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-<section className="bg-muted/40 py-20">
-  <div className="container mx-auto px-4">
-    <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">What Users Say</h2>
-    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
-      <Marquee pauseOnHover className="[--duration:20s]">
-        {firstRow.map((review) => (
-          <ReviewCard key={review.username} {...review} />
-        ))}
-      </Marquee>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background" />
-    </div>
-  </div>
-</section>
-
+      <section className="bg-muted/40 py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">
+            What Users Say
+          </h2>
+          <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
+            <Marquee pauseOnHover className="[--duration:20s]">
+              {firstRow.map((review) => (
+                <ReviewCard key={review.username} {...review} />
+              ))}
+            </Marquee>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background" />
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4 flex flex-col items-center text-center">
-          <h2 className="mb-6 text-3xl font-bold tracking-tight sm:text-4xl">Ready to Get Started?</h2>
+          <h2 className="mb-6 text-3xl font-bold tracking-tight sm:text-4xl">
+            Ready to Get Started?
+          </h2>
           <p className="mb-10 max-w-2xl text-xl text-muted-foreground">
-            Join thousands of couples who are already using DuoPlan to simplify their shared scheduling.
+            Join thousands of couples who are already using DuoPlan to simplify
+            their shared scheduling.
           </p>
           <Button asChild size="lg" className="px-8">
             <Link href="/dashboard">Try DuoPlan Now</Link>
@@ -230,31 +248,54 @@ export default function LandingPage() {
             <CalendarDays className="h-5 w-5" />
             <span className="text-lg font-semibold">DuoPlan</span>
           </div>
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} DuoPlan. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} DuoPlan. All rights reserved.
+          </p>
           <div className="flex gap-4">
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              href="#"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
               Privacy
             </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              href="#"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
               Terms
             </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              href="#"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
               Contact
             </Link>
           </div>
         </div>
-      </footer>
+      </footer>  
+
+      {/* <SignUpButton mode="modal">
+      <Button variant="outline">Sign Up</Button>
+    </SignUpButton> */}
+
     </div>
-  )
+  );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
   return (
     <div className="flex flex-col items-center rounded-lg border bg-background p-6 text-center shadow-sm transition-all hover:shadow-md">
       <div className="mb-4">{icon}</div>
       <h3 className="mb-2 text-xl font-medium">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
     </div>
-  )
+  );
 }
-
