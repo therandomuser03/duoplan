@@ -231,9 +231,14 @@ export default function LandingPage() {
             Join thousands of couples who are already using DuoPlan to simplify
             their shared scheduling.
           </p>
-          <Button asChild size="lg" className="px-8">
-            <Link href="/dashboard">Try DuoPlan Now</Link>
-          </Button>
+          <SignUpButton mode="modal">
+                  <Button size="lg" className="px-8">
+                    Try DuoPlan Now
+                  </Button>
+                </SignUpButton>
+          {/* <Button asChild size="lg" className="px-8">
+            <Link href="/">Try DuoPlan Now</Link>
+          </Button> */}
         </div>
       </section>
 
