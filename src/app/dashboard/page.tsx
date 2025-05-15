@@ -1,3 +1,5 @@
+// app/dashboard/page.tsx
+
 import { RedirectToSignIn } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { AppSidebar } from "@/components/app-sidebar"
@@ -16,6 +18,8 @@ import { ModeToggle } from "@/components/mode-toggle";
 import UpcomingEvents from "@/components/upcoming-events";
 import SharedPlans from "@/components/shared-plans";
 import RecentNotes from "@/components/recent-notes";
+import { WeeklyCalendar } from "@/app/dashboard/calendar/page";
+import TodaySchedule from "@/components/todays-schedule";
 
 export default async function Dashboard() {
   const { userId } = await auth();
@@ -66,7 +70,14 @@ export default async function Dashboard() {
             <RecentNotes />
             </div>
           </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+            <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+              <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:col-span-2 md:min-h-min">
+              <WeeklyCalendar />
+              </div>
+              <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:col-span-1 md:min-h-min">
+              <TodaySchedule />
+              </div>
+            </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

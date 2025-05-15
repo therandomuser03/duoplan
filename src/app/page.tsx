@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-// import Image from "next/image"
+// import Image from "next/image";
+import Screenshot from "@/../public/screenshot.png";
 import {
   CalendarDays,
   CheckCircle2,
@@ -14,15 +15,10 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { TextAnimate } from "@/components/magicui/text-animate";
 import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/magicui/marquee";
-import {
-  SignInButton,
-  SignUpButton,
-  SignedOut,
-} from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignedOut } from "@clerk/nextjs";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-
 
 const reviews = [
   {
@@ -109,7 +105,7 @@ export default function LandingPage() {
       router.push("/dashboard");
     }
   }, [isSignedIn, router]);
-  
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm lg:px-6">
@@ -120,14 +116,14 @@ export default function LandingPage() {
           </Link>
         </div>
         <div className="flex items-center gap-2">
+          <SignedOut>
+            <SignInButton mode="modal">
+              <Button variant="outline" className="hidden sm:flex">
+                Log In
+              </Button>
+            </SignInButton>
+          </SignedOut>
           <ModeToggle />
-            <SignedOut>
-  <SignInButton mode="modal">
-    <Button variant="outline" className="hidden sm:flex">
-      Log In
-    </Button>
-  </SignInButton>
-</SignedOut>
         </div>
       </header>
 
@@ -149,11 +145,10 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
                 <SignUpButton mode="modal">
-      <Button size="lg" className="px-8">Get Started</Button>
-    </SignUpButton>
-
-
-
+                  <Button size="lg" className="px-8">
+                    Get Started
+                  </Button>
+                </SignUpButton>
                 <Button asChild variant="outline" size="lg">
                   <Link href="#features">Learn More</Link>
                 </Button>
@@ -161,7 +156,9 @@ export default function LandingPage() {
             </div>
 
             {/* App Preview Image */}
-            <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl lg:flex-shrink-0"></div>
+            <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl lg:flex-shrink-0">
+              <img src={Screenshot.src} alt="" />
+            </div>
           </div>
         </div>
       </section>
@@ -272,12 +269,7 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-      </footer>  
-
-      {/* <SignUpButton mode="modal">
-      <Button variant="outline">Sign Up</Button>
-    </SignUpButton> */}
-
+      </footer>
     </div>
   );
 }
