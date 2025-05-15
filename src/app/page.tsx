@@ -127,8 +127,8 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section with App Preview */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto">
+      <section className="py-20">
+        <div className="container mx-auto px-4">
           <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-between">
             {/* Hero Text Content */}
             <div className="pb-10 text-center lg:text-left">
@@ -156,7 +156,7 @@ export default function LandingPage() {
 
             {/* App Preview Image */}
             <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl lg:flex-shrink-0">
-              <Image src="@/../public/screenshot.png" alt="" />
+              <Image src="/screenshot.png" alt="App preview" width={800} height={600} />
             </div>
           </div>
         </div>
