@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-// import Image from "next/image";
-import Screenshot from "@/../public/screenshot.png";
+import Image from "next/image";
 import {
   CalendarDays,
   CheckCircle2,
@@ -83,7 +82,7 @@ const ReviewCard = ({
       )}
     >
       <div className="flex flex-row items-center gap-2">
-        <img className="rounded-full" width="32" height="32" alt="" src={img} />
+        <Image className="rounded-full" width="32" height="32" alt="" src={img} />
         <div className="flex flex-col">
           <figcaption className="text-sm font-medium dark:text-white">
             {name}
@@ -157,7 +156,7 @@ export default function LandingPage() {
 
             {/* App Preview Image */}
             <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl lg:flex-shrink-0">
-              <img src={Screenshot.src} alt="" />
+              <Image src="@/../public/screenshot.png" alt="" />
             </div>
           </div>
         </div>

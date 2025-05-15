@@ -40,27 +40,27 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: House,
     },
     {
       title: "Calendar",
-      url: "#",
+      url: "/dashboard/calendar",
       icon: Calendar,
     },
     {
       title: "Notes",
-      url: "#",
+      url: "/dashboard/notes",
       icon: BookOpen,
     },
     {
       title: "Shared Plans",
-      url: "#",
+      url: "/dashboard/shared-plans",
       icon: Link,
     },
     {
       title: "Help",
-      url: "#",
+      url: "/dashboard/help",
       icon: Info,
     },
   ],

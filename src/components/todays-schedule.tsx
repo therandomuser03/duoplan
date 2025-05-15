@@ -1,4 +1,4 @@
-import { Calendar, MapPin, NotebookText } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 
 const TodaySchedule = () => {
   const today = new Date();
@@ -33,7 +33,7 @@ const TodaySchedule = () => {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="mb-4 border-b pb-4">
-        <h2 className="text-2xl font-semibold">Today's Schedule</h2>
+        <h2 className="text-2xl font-semibold">Today&apos;s Schedule</h2>
         <p className="text-muted-foreground text-lg">{date}</p>
       </div>
       

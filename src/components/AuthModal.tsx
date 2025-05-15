@@ -3,7 +3,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SignIn, SignUp } from "@clerk/nextjs"
-import { useState } from "react"
 
 export function AuthModal({
   mode = "sign-in",

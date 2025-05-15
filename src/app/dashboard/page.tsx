@@ -18,7 +18,7 @@ import { ModeToggle } from "@/components/mode-toggle";
 import UpcomingEvents from "@/components/upcoming-events";
 import SharedPlans from "@/components/shared-plans";
 import RecentNotes from "@/components/recent-notes";
-import { WeeklyCalendar } from "@/app/dashboard/calendar/page";
+import { WeeklyCalendar } from "@/components/weekly-calendar";
 import TodaySchedule from "@/components/todays-schedule";
 
 export default async function Dashboard() {
@@ -38,17 +38,6 @@ export default async function Dashboard() {
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
               <BreadcrumbPage className="text-xl">Dashboard</BreadcrumbPage>
-                {/* <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">
-                      Building Your Application
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block" />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList> */}
               </Breadcrumb>
             </div>
             <div className="flex items-center gap-8">
