@@ -1,10 +1,49 @@
 "use client"
 
-import { BadgeCheck, Bell, ChevronsUpDown, LockOpen, } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar, } from "@/components/ui/sidebar"
+import { useUser } from "@clerk/nextjs"
+import {
+  BadgeCheck,
+  Bell,
+  ChevronsUpDown,
+  LockOpen,
+} from "lucide-react"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
 import { SignOutButton } from "@clerk/nextjs"
+
+export function NavUserWrapper() {
+  const { user } = useUser()
+
+  if (!user) return null // or a loading indicator
+
+  return (
+    <NavUser
+      user={{
+        name: user.fullName || user.username || "Unknown User",
+        email: user.primaryEmailAddress?.emailAddress || "No Email",
+        avatar: user.imageUrl,
+      }}
+    />
+  )
+}
 
 export function NavUser({
   user,
