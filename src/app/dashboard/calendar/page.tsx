@@ -2,6 +2,7 @@
 
 import React from "react";
 import { format, startOfWeek, addDays, isToday } from "date-fns";
+import { toast } from "sonner";
 
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -14,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Bell, Plus } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 type EventType = {
   title: string;
@@ -53,9 +56,15 @@ function FullCalendar() {
       setEvents((prev) =>
         prev.map((event) => (event === editingEvent ? newEvent : event))
       );
+      toast.success(`Event "${newEventTitle}" updated successfully`, {
+        description: `Date: ${format(selectedDateForEvent, "MMM dd, yyyy")}`,
+      });
     } else {
       // Add mode
       setEvents((prev) => [...prev, newEvent]);
+      toast.success(`Event "${newEventTitle}" added to calendar`, {
+        description: `Date: ${format(selectedDateForEvent, "MMM dd, yyyy")}`,
+      });
     }
 
     setIsModalOpen(false);
@@ -64,8 +73,24 @@ function FullCalendar() {
     setSelectedDateForEvent(null);
   };
 
+  const handleDeleteEvent = () => {
+    if (!editingEvent) return;
+    
+    setEvents((prev) => prev.filter((e) => e !== editingEvent));
+    
+    toast.error(`Event "${editingEvent.title}" deleted`, {
+      description: `Removed from ${format(new Date(editingEvent.date), "MMM dd, yyyy")}`,
+    });
+    
+    setIsModalOpen(false);
+    setEditingEvent(null);
+    setNewEventTitle("");
+    setSelectedDateForEvent(null);
+  };
+
   return (
     <SidebarProvider>
+      <Toaster position="top-right" />
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -77,9 +102,13 @@ function FullCalendar() {
                 <BreadcrumbPage className="text-xl">Calendar</BreadcrumbPage>
               </Breadcrumb>
             </div>
-            <div className="flex items-center gap-8">
-              <Bell />
-              <Plus />
+            <div className="flex items-center gap-4">
+              <Button variant="ghost">
+                <Bell />
+              </Button>
+              <Button variant="ghost">
+                <Plus />
+              </Button>
               <ModeToggle />
             </div>
           </div>
@@ -87,38 +116,46 @@ function FullCalendar() {
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {/* Controls */}
-          <div className="flex gap-2 mb-4 flex-wrap">
-            <button
+          <div className="flex gap-4 mb-4 flex-wrap justify-end">
+            <Button
               onClick={() => {
                 setSelectedDateForEvent(date ?? null);
                 setIsModalOpen(true);
               }}
-              className="flex items-center gap-2 px-3 py-2 rounded-md bg-secondary text-primary text-sm"
+              className="flex items-center gap-2 px-3 py-2 rounded-md bg-secondary hover:bg-primary text-primary hover:text-secondary text-sm"
             >
               <Plus className="w-4 h-4" />
               Add Event
-            </button>
+            </Button>
 
-            <button
-              onClick={() => setViewMode("month")}
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                setViewMode("month");
+                toast.info("Switched to month view");
+              }}
               className={`px-4 py-2 rounded-md border transition-colors ${
                 viewMode === "month"
-                  ? "bg-primary text-secondary border-primary"
-                  : "bg-muted text-muted-foreground border-muted"
+                  ? "bg-primary hover:bg-secondary text-secondary hover:text-primary border-primary"
+                  : "bg-muted hover:bg-neutral-500 hover:text-neutral-900 text-muted-foreground border-muted"
               }`}
             >
               Month
-            </button>
-            <button
-              onClick={() => setViewMode("week")}
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                setViewMode("week");
+                toast.info("Switched to week view");
+              }}
               className={`px-4 py-2 rounded-md border transition-colors ${
                 viewMode === "week"
-                  ? "bg-primary text-secondary border-primary"
-                  : "bg-muted text-muted-foreground border-muted"
+                  ? "bg-primary hover:bg-secondary text-secondary hover:text-primary border-primary"
+                  : "bg-muted hover:bg-neutral-500 hover:text-neutral-900 text-muted-foreground border-muted"
               }`}
             >
               Week
-            </button>
+            </Button>
           </div>
 
           {/* Calendar */}
@@ -127,7 +164,13 @@ function FullCalendar() {
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={setDate}
+                onSelect={(newDate) => {
+                  setDate(newDate);
+                  if (newDate) {
+                    const formattedDate = format(newDate, "MMM dd, yyyy");
+                    toast.info(`Selected date: ${formattedDate}`);
+                  }
+                }}
                 className="w-full h-full"
                 classNames={{
                   table: "w-full h-full table-fixed border-collapse",
@@ -159,6 +202,9 @@ function FullCalendar() {
                               setNewEventTitle(event.title);
                               setSelectedDateForEvent(new Date(event.date));
                               setIsModalOpen(true);
+                              toast("Editing event", {
+                                description: event.title,
+                              });
                             }}
                             className={`cursor-pointer text-white text-xs px-2 py-1 rounded ${event.color}`}
                           >
@@ -199,6 +245,9 @@ function FullCalendar() {
                             setNewEventTitle(event.title);
                             setSelectedDateForEvent(new Date(event.date));
                             setIsModalOpen(true);
+                            toast("Editing event", {
+                              description: event.title,
+                            });
                           }}
                           className={`mt-1 text-xs px-2 py-1 rounded text-white cursor-pointer ${event.color}`}
                         >
@@ -241,41 +290,34 @@ function FullCalendar() {
                   }
                 />
 
-                <button
+                <Button
                   onClick={handleAddOrEditEvent}
                   className="bg-blue-600 text-white px-4 py-2 rounded w-full"
                 >
                   {editingEvent ? "Update Event" : "Save Event"}
-                </button>
+                </Button>
 
                 {editingEvent && (
-                  <button
-                    onClick={() => {
-                      setEvents((prev) =>
-                        prev.filter((e) => e !== editingEvent)
-                      );
-                      setIsModalOpen(false);
-                      setEditingEvent(null);
-                      setNewEventTitle("");
-                      setSelectedDateForEvent(null);
-                    }}
+                  <Button
+                    onClick={handleDeleteEvent}
                     className="mt-2 text-sm text-red-600 w-full"
                   >
                     Delete Event
-                  </button>
+                  </Button>
                 )}
 
-                <button
+                <Button
                   onClick={() => {
                     setIsModalOpen(false);
                     setEditingEvent(null);
                     setNewEventTitle("");
                     setSelectedDateForEvent(null);
+                    toast.info("Action cancelled");
                   }}
                   className="mt-2 text-sm text-gray-500 w-full"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
