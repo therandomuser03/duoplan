@@ -42,7 +42,12 @@ function FullCalendar() {
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="rounded-md border"
+            className="rounded-md border w-full max-w-fit"
+            classNames={{
+              day: "w-12 h-12 text-base", 
+              head_cell: "text-base w-12", 
+              caption_label: "text-lg", 
+            }}
           />
         </div>
       </SidebarInset>
