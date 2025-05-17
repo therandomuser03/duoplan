@@ -20,6 +20,7 @@ import SharedPlans from "@/components/shared-plans";
 import RecentNotes from "@/components/recent-notes";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import TodaySchedule from "@/components/todays-schedule";
+import { Button } from "@/components/ui/button";
 
 export default async function Dashboard() {
   const { userId } = await auth();
@@ -40,9 +41,13 @@ export default async function Dashboard() {
               <BreadcrumbPage className="text-xl">Dashboard</BreadcrumbPage>
               </Breadcrumb>
             </div>
-            <div className="flex items-center gap-8">
-              <Bell />
-              <Plus />
+            <div className="flex items-center gap-4">
+              <Button variant="ghost">
+                <Bell />
+              </Button>
+              <Button variant="ghost">
+                <Plus />
+              </Button>
               <ModeToggle />
             </div>
           </div>

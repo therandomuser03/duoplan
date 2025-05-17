@@ -39,9 +39,13 @@ function Help() {
                 <BreadcrumbPage className="text-xl">Help</BreadcrumbPage>
               </Breadcrumb>
             </div>
-            <div className="flex items-center gap-8">
-              <Bell />
-              <Plus />
+            <div className="flex items-center gap-4">
+              <Button variant="ghost">
+                <Bell />
+              </Button>
+              <Button variant="ghost">
+                <Plus />
+              </Button>
               <ModeToggle />
             </div>
           </div>
