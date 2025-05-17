@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-import { Calendar, MapPin } from "lucide-react";
+import { Bell, Plus, Search, Settings } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -11,44 +11,147 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbPage } from "@/components/ui/breadcrumb";
-import { Bell, Plus } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 
 function Notes() {
-
-  const today = new Date();
-  const date = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-  // Sample schedule data
-  const scheduleItems = [
+  // Sample notes data (in a real app, this would come from an API)
+  const notesData = [
     {
-      title: "Team Meeting",
-      location: "Office Room 3",
-      timeStart: "2:00 PM",
-      timeEnd: "3:00 PM",
-      color: "bg-blue-100 text-blue-600"
+      id: 1,
+      title: "Team Meeting Notes",
+      lastEdited: "May 16, 2025",
+      content: "Project updates and action items for the product launch. Follow up with marketing team on timeline.",
+      color: "bg-blue-500",
+      relatedTo: "Team Meeting (May 16)",
+      timeCreated: "2025-05-16T14:00:00" // ISO format for easier sorting
     },
     {
-      title: "Coffee with Alex",
-      location: "Cafe Downtown",
-      timeStart: "4:00 PM",
-      timeEnd: "5:00 PM",
-      color: "bg-green-100 text-green-600"
+      id: 2,
+      title: "Dinner Ideas",
+      lastEdited: "May 14, 2025",
+      content: "Anniversary dinner options:\n- Italian Restaurant downtown\n- Seafood place by the pier",
+      color: "bg-purple-500",
+      relatedTo: "Dinner Reservation (May 16)",
+      timeCreated: "2025-05-14T19:00:00"
     },
     {
-      title: "Dinner Reservation",
-      location: "Italian Restaurant",
-      timeStart: "7:00 PM",
-      timeEnd: "9:00 PM",
-      color: "bg-purple-100 text-purple-600",
-      note: "Anniversary dinner"
+      id: 3,
+      title: "Cafe Recommendations",
+      lastEdited: "May 12, 2025",
+      content: "- Downtown Café: great for meetings\n- Riverside Café: nice view\n- Bean Corner: best lattes",
+      color: "bg-green-500",
+      relatedTo: "Coffee with Alex (May 16)",
+      timeCreated: "2025-05-12T16:00:00"
+    },
+    {
+      id: 4,
+      title: "Party Planning",
+      lastEdited: "May 10, 2025",
+      content: "Guest list and menu ideas for the upcoming party. Need to confirm RSVPs by the weekend.",
+      color: "bg-yellow-500",
+      relatedTo: "Party (May 22)",
+      timeCreated: "2025-05-10T18:30:00"
+    },
+    {
+      id: 5,
+      title: "Holiday Planning",
+      lastEdited: "May 8, 2025",
+      content: "Ideas for the upcoming holiday:\n- Beach day\n- Mountain retreat",
+      color: "bg-red-500",
+      relatedTo: "Holiday (May 20)",
+      timeCreated: "2025-05-08T09:15:00"
+    },
+    {
+      id: 6,
+      title: "Interview Prep",
+      lastEdited: "May 1, 2025",
+      content: "Questions to prepare for the upcoming interview. Research company background and values.",
+      color: "bg-pink-500",
+      relatedTo: "Interview (May 2)",
+      timeCreated: "2025-05-01T11:30:00"
     }
   ];
+
+  type Note = {
+    id: number;
+    title: string;
+    lastEdited: string;
+    content: string;
+    color: string;
+    relatedTo: string;
+    timeCreated: string;
+  };
+
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
+
+  // Simulate fetching data from an API
+  useEffect(() => {
+    // This would be replaced by an actual API call in the future
+    const fetchNotes = async () => {
+      setIsLoading(true);
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Sort the notes by timeCreated (most recent first)
+        const sortedNotes = [...notesData].sort((a, b) => 
+          new Date(b.timeCreated).getTime() - new Date(a.timeCreated).getTime()
+        );
+        
+        setNotes(sortedNotes);
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotes();
+  }, []);
+
+  // Filter notes based on search query and active tab
+  const getFilteredNotes = () => {
+    let filtered = notes;
+    
+    // Apply search filter
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(note => 
+        note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        note.content.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply tab filter (this would be more sophisticated in a real app)
+    if (activeTab === "recent") {
+      // Show only notes from the last 7 days
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      filtered = filtered.filter(note => 
+        new Date(note.timeCreated) > sevenDaysAgo
+      );
+    } else if (activeTab === "favorites") {
+      // In a real app, you'd have a favorites field
+      // For now, just show a subset
+      filtered = filtered.filter(note => [1, 3, 5].includes(note.id));
+    } else if (activeTab === "date") {
+      // Already sorted by date in the useEffect
+    }
+    
+    return filtered;
+  };
+
+  const filteredNotes = getFilteredNotes();
 
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center justify-between w-full px-4">
             <div className="flex items-center gap-2">
@@ -65,36 +168,82 @@ function Notes() {
             </div>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="p-6 h-full flex flex-col">
-      <div className="mb-4 border-b pb-4">
-        <h2 className="text-2xl font-semibold">Today&apos;s Schedule</h2>
-        <p className="text-muted-foreground text-lg">{date}</p>
-      </div>
-      
-      <div className="flex flex-col gap-4">
-        {scheduleItems.map((item, index) => (
-          <div key={index} className="p-4 border rounded-lg">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-medium text-blue-600">{item.title}</h3>
-              <div className={`rounded-full px-3 py-1 text-sm ${item.color}`}>
-                {item.timeStart} - {item.timeEnd}
-              </div>
+        
+        <div className="flex flex-col gap-4 p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" 
+                size={18} 
+              />
+              <Input 
+                placeholder="Search notes..." 
+                className="pl-10 bg-muted/70"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <MapPin size={16} />
-              <span>{item.location}</span>
-            </div>
-            {item.note && (
-              <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                <Calendar size={16} />
-                <span>Note: {item.note}</span>
-              </div>
-            )}
+            
+            <Tabs defaultValue="all" className="flex-1">
+              <TabsList className="w-full grid grid-cols-4">
+                <TabsTrigger 
+                  value="all" 
+                  onClick={() => setActiveTab("all")}
+                  className={activeTab === "all" ? "bg-accent text-accent-foreground" : ""}
+                >
+                  All Notes
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="recent" 
+                  onClick={() => setActiveTab("recent")}
+                  className={activeTab === "recent" ? "bg-accent text-accent-foreground" : ""}
+                >
+                  Recent
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="favorites" 
+                  onClick={() => setActiveTab("favorites")}
+                  className={activeTab === "favorites" ? "bg-accent text-accent-foreground" : ""}
+                >
+                  Favorites
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="date" 
+                  onClick={() => setActiveTab("date")}
+                  className={activeTab === "date" ? "bg-accent text-accent-foreground" : ""}
+                >
+                  Date Added
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-        ))}
-      </div>
-    </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <p>Loading notes...</p>
+            </div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground">No notes found. Try adjusting your search criteria.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredNotes.map((note) => (
+                <div 
+                  key={note.id} 
+                  className="rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <div className={`h-2 ${note.color}`} />
+                  <div className="p-4 bg-muted/30 dark:bg-muted/20 h-full flex flex-col">
+                    <h3 className="text-lg font-medium text-blue-500 mb-1">{note.title}</h3>
+                    <p className="text-xs text-muted-foreground mb-3">Last edited: {note.lastEdited}</p>
+                    <p className="text-sm flex-1 whitespace-pre-line">{note.content}</p>
+                    <p className="text-xs text-muted-foreground mt-4">Related to: {note.relatedTo}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>
