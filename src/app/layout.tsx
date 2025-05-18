@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import SyncUserProfile from '@/components/auth/SyncUserProfile';
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from 'next/headers';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,13 +22,26 @@ export const metadata: Metadata = {
   description: "DuoPlan is a minimalist, real-time daily planner designed for two people. Share schedules, plan events, take notes, and stay in sync effortlessly with a modern, inclusive interface.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        layout: {
+          // disable the “Development mode” warnings/banner
+          unsafe_disableDevelopmentModeWarnings: true,
+        },
+      }}
+    >
+      <SyncUserProfile />
       <html lang="en" suppressHydrationWarning>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <ThemeProvider
