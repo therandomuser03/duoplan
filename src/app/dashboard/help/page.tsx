@@ -10,9 +10,9 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbPage } from "@/components/ui/breadcrumb";
-import { Bell, Plus } from "lucide-react";
+import { Bell, Plus, Search, HelpCircle } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
-import { Calendar, FileText, Users, Search } from "lucide-react";
+import { Calendar, FileText, Users, Book, Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,161 +23,162 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { Badge } from "@/components/ui/badge";
 
 function Help() {
    return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between w-full px-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
-                <BreadcrumbPage className="text-xl">Help</BreadcrumbPage>
+                <BreadcrumbPage className="text-xl font-semibold flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5" />
+                  Help Center
+                </BreadcrumbPage>
               </Breadcrumb>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost">
-                <Bell />
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500"></span>
               </Button>
-              <Button variant="ghost">
-                <Plus />
+              <Button variant="ghost" size="icon">
+                <Plus className="h-5 w-5" />
               </Button>
               <ModeToggle />
             </div>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-6 p-6">
+        <div className="flex flex-1 flex-col gap-8 p-6 max-w-6xl mx-auto">
           {/* Hero section */}
-          <div className="text-center py-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-3">How can we help you?</h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+          <div className="text-center py-10 bg-gradient-to-b from-background to-muted rounded-xl">
+            <h1 className="text-4xl font-bold tracking-tight mb-4">How can we help you?</h1>
+            <p className="text-muted-foreground max-w-xl mx-auto text-lg">
               Find answers to common questions about DuoPlan and learn how to make the most of its features.
             </p>
-            <div className="flex w-full max-w-md mx-auto items-center gap-2 mt-6">
+            <div className="flex w-full max-w-md mx-auto items-center gap-2 mt-8 relative">
+              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
               <Input 
                 type="search" 
                 placeholder="Search help articles..." 
-                className="flex-1"
+                className="flex-1 pl-10"
               />
               <Button variant="default">
-                <Search className="h-4 w-4 mr-2" />
                 Search
               </Button>
             </div>
           </div>
 
           {/* Quick links */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {quickLinks.map((link, index) => (
-              <div key={index} className="p-6 bg-muted/50 rounded-xl">
-                <div className="flex items-center gap-3 mb-3">
+              <div key={index} className="p-6 bg-card border rounded-xl hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-center gap-3 mb-4">
                   {link.icon}
-                  <h3 className="text-lg font-medium">{link.title}</h3>
+                  <h3 className="text-lg font-semibold">{link.title}</h3>
                 </div>
-                <p className="text-muted-foreground mb-4">{link.description}</p>
-                <Button variant="outline" className="w-full">Learn More</Button>
+                <p className="text-muted-foreground mb-5">{link.description}</p>
+                <Button variant="outline" className="w-full hover:bg-muted">Learn More</Button>
               </div>
             ))}
           </div>
 
           {/* FAQ Section */}
-          <div className="mt-8">
+          <div className="mt-8 bg-card border rounded-xl overflow-hidden">
+            <div className="bg-muted p-4 border-b">
+              <h2 className="text-xl font-semibold">Frequently Asked Questions</h2>
+            </div>
             <Tabs defaultValue="getting-started" className="w-full">
-              <div className="flex justify-center mb-6">
-                <TabsList>
-                  <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
-                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
-                  <TabsTrigger value="plans">Shared Plans</TabsTrigger>
-                  <TabsTrigger value="account">Account</TabsTrigger>
+              <div className="px-4 pt-4 pb-2 border-b bg-muted/50">
+                <TabsList className="grid grid-cols-5 gap-4">
+                  <TabsTrigger value="getting-started" className="text-sm">Getting Started</TabsTrigger>
+                  <TabsTrigger value="calendar" className="text-sm">Calendar</TabsTrigger>
+                  <TabsTrigger value="notes" className="text-sm">Notes</TabsTrigger>
+                  <TabsTrigger value="plans" className="text-sm">Shared Plans</TabsTrigger>
+                  <TabsTrigger value="account" className="text-sm">Account</TabsTrigger>
                 </TabsList>
               </div>
               
-              <TabsContent value="getting-started">
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <h2 className="text-xl font-semibold mb-4">Getting Started with DuoPlan</h2>
-                  <Accordion type="single" collapsible className="w-full">
-                    {gettingStartedFAQs.map((faq, index) => (
-                      <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger>{faq.question}</AccordionTrigger>
-                        <AccordionContent>{faq.answer}</AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
+              <TabsContent value="getting-started" className="p-6">
+                <Accordion type="single" collapsible className="w-full">
+                  {gettingStartedFAQs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`} className="border-b">
+                      <AccordionTrigger className="py-4 text-base font-medium hover:bg-muted/30 px-2 rounded">{faq.question}</AccordionTrigger>
+                      <AccordionContent className="px-2 pb-4 text-muted-foreground">{faq.answer}</AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               </TabsContent>
               
-              <TabsContent value="calendar">
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <h2 className="text-xl font-semibold mb-4">Using the Calendar</h2>
-                  <Accordion type="single" collapsible className="w-full">
-                    {calendarFAQs.map((faq, index) => (
-                      <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger>{faq.question}</AccordionTrigger>
-                        <AccordionContent>{faq.answer}</AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
+              <TabsContent value="calendar" className="p-6">
+                <Accordion type="single" collapsible className="w-full">
+                  {calendarFAQs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`} className="border-b">
+                      <AccordionTrigger className="py-4 text-base font-medium hover:bg-muted/30 px-2 rounded">{faq.question}</AccordionTrigger>
+                      <AccordionContent className="px-2 pb-4 text-muted-foreground">{faq.answer}</AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               </TabsContent>
               
-              <TabsContent value="notes">
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <h2 className="text-xl font-semibold mb-4">Working with Notes</h2>
-                  <Accordion type="single" collapsible className="w-full">
-                    {notesFAQs.map((faq, index) => (
-                      <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger>{faq.question}</AccordionTrigger>
-                        <AccordionContent>{faq.answer}</AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
+              <TabsContent value="notes" className="p-6">
+                <Accordion type="single" collapsible className="w-full">
+                  {notesFAQs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`} className="border-b">
+                      <AccordionTrigger className="py-4 text-base font-medium hover:bg-muted/30 px-2 rounded">{faq.question}</AccordionTrigger>
+                      <AccordionContent className="px-2 pb-4 text-muted-foreground">{faq.answer}</AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               </TabsContent>
               
-              <TabsContent value="plans">
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <h2 className="text-xl font-semibold mb-4">Shared Plans Features</h2>
-                  <Accordion type="single" collapsible className="w-full">
-                    {sharedPlansFAQs.map((faq, index) => (
-                      <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger>{faq.question}</AccordionTrigger>
-                        <AccordionContent>{faq.answer}</AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
+              <TabsContent value="plans" className="p-6">
+                <Accordion type="single" collapsible className="w-full">
+                  {sharedPlansFAQs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`} className="border-b">
+                      <AccordionTrigger className="py-4 text-base font-medium hover:bg-muted/30 px-2 rounded">{faq.question}</AccordionTrigger>
+                      <AccordionContent className="px-2 pb-4 text-muted-foreground">{faq.answer}</AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               </TabsContent>
               
-              <TabsContent value="account">
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <h2 className="text-xl font-semibold mb-4">Account Management</h2>
-                  <Accordion type="single" collapsible className="w-full">
-                    {accountFAQs.map((faq, index) => (
-                      <AccordionItem key={index} value={`item-${index}`}>
-                        <AccordionTrigger>{faq.question}</AccordionTrigger>
-                        <AccordionContent>{faq.answer}</AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
+              <TabsContent value="account" className="p-6">
+                <Accordion type="single" collapsible className="w-full">
+                  {accountFAQs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`} className="border-b">
+                      <AccordionTrigger className="py-4 text-base font-medium hover:bg-muted/30 px-2 rounded">{faq.question}</AccordionTrigger>
+                      <AccordionContent className="px-2 pb-4 text-muted-foreground">{faq.answer}</AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               </TabsContent>
             </Tabs>
           </div>
 
           {/* Contact support */}
-          <div className="bg-muted/50 rounded-xl p-6 mt-8 text-center">
+          <div className="bg-card border rounded-xl p-8 mt-8 text-center">
+            <div className="bg-muted inline-flex p-3 rounded-full mb-4">
+              <Book className="h-6 w-6" />
+            </div>
             <h2 className="text-xl font-semibold mb-2">Still need help?</h2>
-            <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
+            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
               If you couldn&apos;t find the answer to your question, our support team is ready to assist you.
             </p>
-            <div className="flex justify-center gap-4">
-              <Button variant="outline">View Documentation</Button>
-              <Button>Contact Support</Button>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
+              <Button variant="outline" className="flex-1">
+                <FileText className="h-4 w-4 mr-2" />
+                View Documentation
+              </Button>
+              <Button className="flex-1">
+                <Settings className="h-4 w-4 mr-2" />
+                Contact Support
+              </Button>
             </div>
           </div>
         </div>
@@ -189,17 +190,17 @@ function Help() {
 // Quick links data
 const quickLinks = [
   {
-    icon: <div className="bg-blue-100 text-blue-600 p-2 rounded-lg"><Calendar className="h-5 w-5" /></div>,
+    icon: <div className="bg-blue-100 text-blue-600 p-3 rounded-full"><Calendar className="h-5 w-5" /></div>,
     title: "Calendar Features",
     description: "Learn how to create events, set reminders, and manage your schedule effectively."
   },
   {
-    icon: <div className="bg-green-100 text-green-600 p-2 rounded-lg"><FileText className="h-5 w-5" /></div>,
+    icon: <div className="bg-green-100 text-green-600 p-3 rounded-full"><FileText className="h-5 w-5" /></div>,
     title: "Managing Notes",
-    description: "Discover how to create, organize, and share notes with your team for better collaboration and productivity."
+    description: "Create, organize, and share notes with your team for a better collaboration."
   },
   {
-    icon: <div className="bg-purple-100 text-purple-600 p-2 rounded-lg"><Users className="h-5 w-5" /></div>,
+    icon: <div className="bg-purple-100 text-purple-600 p-3 rounded-full"><Users className="h-5 w-5" /></div>,
     title: "Collaboration Tools",
     description: "Explore features for sharing plans and collaborating with team members."
   }

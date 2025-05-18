@@ -1,3 +1,5 @@
+// notes/page.tsx
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -14,7 +16,7 @@ import { Breadcrumb, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
+import { cn } from "@/lib/utils";
 
 function Notes() {
   // Sample notes data (in a real app, this would come from an API)
@@ -146,6 +148,14 @@ function Notes() {
     return filtered;
   };
 
+  // Define tabs
+  const tabs = [
+    { id: "all", label: "All Notes" },
+    { id: "recent", label: "Recent" },
+    { id: "favorites", label: "Favorites" },
+    { id: "date", label: "Date Added" },
+  ];
+
   const filteredNotes = getFilteredNotes();
 
   return (
@@ -187,39 +197,24 @@ function Notes() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
-            <Tabs defaultValue="all" className="flex-1">
-              <TabsList className="w-full grid grid-cols-4">
-                <TabsTrigger 
-                  value="all" 
-                  onClick={() => setActiveTab("all")}
-                  className={activeTab === "all" ? "bg-accent text-accent-foreground" : ""}
-                >
-                  All Notes
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="recent" 
-                  onClick={() => setActiveTab("recent")}
-                  className={activeTab === "recent" ? "bg-accent text-accent-foreground" : ""}
-                >
-                  Recent
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="favorites" 
-                  onClick={() => setActiveTab("favorites")}
-                  className={activeTab === "favorites" ? "bg-accent text-accent-foreground" : ""}
-                >
-                  Favorites
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="date" 
-                  onClick={() => setActiveTab("date")}
-                  className={activeTab === "date" ? "bg-accent text-accent-foreground" : ""}
-                >
-                  Date Added
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+          </div>
+
+          {/* Updated tab UI to match Shared Plans design */}
+          <div className="flex border-b mb-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={cn(
+                  "px-6 py-3 font-medium",
+                  activeTab === tab.id
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
           
           {isLoading ? (
