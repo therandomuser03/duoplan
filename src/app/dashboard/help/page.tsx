@@ -23,7 +23,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 
 function Help() {
    return (
@@ -36,16 +36,13 @@ function Help() {
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
-                <BreadcrumbPage className="text-xl font-semibold flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5" />
-                  Help Center
-                </BreadcrumbPage>
+                <BreadcrumbPage className="text-xl">Help Center</BreadcrumbPage>
               </Breadcrumb>
             </div>
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500"></span>
+                {/* <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500"></span> */}
               </Button>
               <Button variant="ghost" size="icon">
                 <Plus className="h-5 w-5" />

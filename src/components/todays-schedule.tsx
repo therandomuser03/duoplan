@@ -1,4 +1,6 @@
 import { Calendar, MapPin } from "lucide-react";
+import { Button } from "./ui/button";
+import Link from "next/link";
 
 const TodaySchedule = () => {
   const today = new Date();
@@ -32,10 +34,16 @@ const TodaySchedule = () => {
 
   return (
     <div className="p-6 h-full flex flex-col">
-      <div className="mb-4 border-b pb-4">
-        <h2 className="text-2xl font-semibold">Today&apos;s Schedule</h2>
-        <p className="text-muted-foreground text-lg">{date}</p>
-      </div>
+      <div className="mb-4 border-b pb-4 flex items-start justify-between">
+  <div>
+    <h2 className="text-2xl font-semibold">Today&apos;s Schedule</h2>
+    <p className="text-muted-foreground text-lg">{date}</p>
+  </div>
+  <Button asChild variant="secondary">
+    <Link href="/dashboard/notes">View All</Link>
+    </Button>
+</div>
+
       
       <div className="flex flex-col gap-4">
         {scheduleItems.map((item, index) => (

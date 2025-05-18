@@ -83,7 +83,7 @@ export function WeeklyCalendar() {
   
   return (
     <Card className="w-full border-none shadow-none bg-transparent">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 text-2xl font-semibold">
         <CardTitle>Weekly Calendar</CardTitle>
       </CardHeader>
       
@@ -124,9 +124,9 @@ export function WeeklyCalendar() {
                 )}
               >
                 <div className={cn(
-                  "text-sm font-medium mb-1 sticky top-0 z-10 p-1 rounded-full w-6 h-6 flex items-center justify-center mx-auto",
+                  "text-sm font-medium mb-1 sticky top-0 z-10 p-1 rounded-full w-9 h-9 flex items-center justify-center mx-auto",
                   today 
-                    ? "bg-blue-500 text-white" 
+                    ? "border border-blue-500 bg-neutral-900 text-blue-500" 
                     : "text-gray-700 dark:text-gray-300"
                 )}>
                   {date.getDate()}

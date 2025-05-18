@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import { Calendar, MapPin } from "lucide-react";
 import {
@@ -18,8 +18,36 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { useUser } from "@clerk/nextjs";
+import { createBrowserClient } from "@supabase/ssr";
+
 function SharedPlans() {
+  const { user } = useUser();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
   const [activeTab, setActiveTab] = useState("shared-by-me");
+  const [isLoading, setIsLoading] = useState(true);
+  const [sharedPlans, setSharedPlans] = useState<SharedPlan[]>([]);
+
+  // Define the type for shared plans based on the table structure
+  type SharedPlan = {
+    id: string;
+    from_user_id: string;
+    to_user_id: string;
+    space_id: string;
+    title: string;
+    content: string;
+    time_created: string;
+    place: string;
+    start_time: string;
+    end_time: string;
+    color_class: string;
+    shared_by_name: string;
+    created_at: string;
+  };
 
   const today = new Date();
   const date = today.toLocaleDateString("en-US", {
@@ -28,41 +56,82 @@ function SharedPlans() {
     day: "numeric",
   });
 
-  const scheduleSharedByMe = [
-    {
-      title: "Marketing Sync",
-      location: "Zoom",
-      timeStart: "9:00 AM",
-      timeEnd: "9:45 AM",
-      status: "Active",
-      note: "Weekly performance review",
-    },
-    {
-      title: "Budget Approval Meeting",
-      location: "Conference Room B",
-      timeStart: "11:00 AM",
-      timeEnd: "12:00 PM",
-      status: "Pending",
-    },
-  ];
+  // Fetch shared plans data from Supabase
+  useEffect(() => {
+    if (!user) return;
 
-  const scheduleSharedWithMe = [
-    {
-      title: "Product Demo",
-      location: "Client's Office",
-      timeStart: "2:00 PM",
-      timeEnd: "3:00 PM",
-      status: "Active",
-      note: "Showcase new features",
-    },
-    {
-      title: "Retrospective",
-      location: "Slack Huddle",
-      timeStart: "4:00 PM",
-      timeEnd: "4:30 PM",
-      status: "Completed",
-    },
-  ];
+    const fetchSharedPlans = async () => {
+      setIsLoading(true);
+      try {
+        console.log("Fetching shared plans for Clerk ID:", user.id);
+
+        // Fetch plans shared by the current user
+        const { data: sharedByMeData, error: sharedByMeError } = await supabase
+          .from("shared_notes")
+          .select("*")
+          .eq("from_user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        // Fetch plans shared with the current user
+        const { data: sharedWithMeData, error: sharedWithMeError } = await supabase
+          .from("shared_notes")
+          .select("*")
+          .eq("to_user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        console.log("Supabase returned:", { 
+          sharedByMeData, 
+          sharedByMeError, 
+          sharedWithMeData, 
+          sharedWithMeError 
+        });
+
+        if (sharedByMeError) {
+          console.error("Supabase query error (shared by me):", sharedByMeError.message || sharedByMeError);
+        }
+
+        if (sharedWithMeError) {
+          console.error("Supabase query error (shared with me):", sharedWithMeError.message || sharedWithMeError);
+        }
+
+        // Combine data from both queries
+        const allData = [
+          ...(sharedByMeData || []),
+          ...(sharedWithMeData || [])
+        ];
+
+        if (!allData || allData.length === 0) {
+          console.warn("No shared plans returned for this user.");
+        }
+
+        setSharedPlans(allData as SharedPlan[]);
+      } catch (error: any) {
+        console.error(
+          "Unexpected error fetching shared plans:",
+          error.message || error
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSharedPlans();
+  }, [user]);
+
+  // Filter plans based on active tab
+  const getFilteredPlans = () => {
+    if (!user) return [];
+
+    switch (activeTab) {
+      case "shared-by-me":
+        return sharedPlans.filter(plan => plan.from_user_id === user.id);
+      case "shared-with-me":
+        return sharedPlans.filter(plan => plan.to_user_id === user.id);
+      case "all-plans":
+      default:
+        return sharedPlans;
+    }
+  };
 
   const tabs = [
     { id: "shared-by-me", label: "Shared by Me" },
@@ -70,17 +139,45 @@ function SharedPlans() {
     { id: "all-plans", label: "All Plans" },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
-      case "Pending":
-        return "bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-400";
-      case "Active":
-      default:
-        return "bg-green-200 text-green-700 dark:bg-green-900 dark:text-green-300";
+  const getStatusColor = (startTime: string, endTime: string) => {
+    const now = new Date();
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (now > end) {
+      return "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300"; // Completed
+    } else if (now < start) {
+      return "bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-400"; // Pending
+    } else {
+      return "bg-green-200 text-green-700 dark:bg-green-900 dark:text-green-300"; // Active
     }
   };
+
+  const getStatus = (startTime: string, endTime: string) => {
+    const now = new Date();
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (now > end) {
+      return "Completed";
+    } else if (now < start) {
+      return "Pending";
+    } else {
+      return "Active";
+    }
+  };
+
+  // Format time to AM/PM format
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const filteredPlans = getFilteredPlans();
 
   return (
     <SidebarProvider>
@@ -127,7 +224,7 @@ function SharedPlans() {
             ))}
           </div>
 
-          {/* Shared Plans Section - Updated with bottom UI style */}
+          {/* Shared Plans Section */}
           <div className="mb-8">
             <div className="mb-4">
               <h2 className="text-xl font-semibold">Shared Plans</h2>
@@ -135,176 +232,193 @@ function SharedPlans() {
             </div>
 
             <div className="flex flex-col gap-6">
-              {/* Content based on active tab */}
-              {activeTab === "shared-by-me" && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Shared by Me</h3>
-                  <div className="flex flex-col gap-4">
-                    {scheduleSharedByMe.map((item, index) => (
-                      <div
-                        key={index}
-                        className="p-4 border rounded-lg dark:border-gray-700"
-                      >
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
-                              {item.title}
-                            </h4>
-                            <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                              <MapPin size={16} />
-                              <span>{item.location}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                              <Users size={16} />
-                              <span>Shared with: Internal Team</span>
-                            </div>
-                            {item.note && (
-                              <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                <Calendar size={16} />
-                                <span>Note: {item.note}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
-                              item.status
-                            )}`}
-                          >
-                            {item.status}: {item.timeStart} - {item.timeEnd}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-40">
+                  <p>Loading shared plans...</p>
                 </div>
-              )}
-
-              {activeTab === "shared-with-me" && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Shared with Me</h3>
-                  <div className="flex flex-col gap-4">
-                    {scheduleSharedWithMe.map((item, index) => (
-                      <div
-                        key={index}
-                        className="p-4 border rounded-lg dark:border-gray-700"
-                      >
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
-                              {item.title}
-                            </h4>
-                            <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                              <MapPin size={16} />
-                              <span>{item.location}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                              <User size={16} />
-                              <span>Shared by: Project Owner</span>
-                            </div>
-                            {item.note && (
-                              <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                <Calendar size={16} />
-                                <span>Note: {item.note}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
-                              item.status
-                            )}`}
-                          >
-                            {item.status}: {item.timeStart} - {item.timeEnd}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              ) : filteredPlans.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">
+                    No shared plans found for this tab.
+                  </p>
                 </div>
-              )}
-
-              {activeTab === "all-plans" && (
+              ) : (
                 <>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Shared by Me</h3>
-                    <div className="flex flex-col gap-4">
-                      {scheduleSharedByMe.map((item, index) => (
-                        <div
-                          key={index}
-                          className="p-4 border rounded-lg dark:border-gray-700"
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
-                                {item.title}
-                              </h4>
-                              <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                <MapPin size={16} />
-                                <span>{item.location}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                <Users size={16} />
-                                <span>Shared with: Internal Team</span>
-                              </div>
-                              {item.note && (
+                  {activeTab === "shared-by-me" && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Shared by Me</h3>
+                      <div className="flex flex-col gap-4">
+                        {filteredPlans.map((plan) => (
+                          <div
+                            key={plan.id}
+                            className="p-4 border rounded-lg dark:border-gray-700"
+                          >
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
+                                  {plan.title}
+                                </h4>
                                 <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                  <Calendar size={16} />
-                                  <span>Note: {item.note}</span>
+                                  <MapPin size={16} />
+                                  <span>{plan.place || "No location specified"}</span>
                                 </div>
-                              )}
-                            </div>
-                            <div
-                              className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
-                                item.status
-                              )}`}
-                            >
-                              {item.status}: {item.timeStart} - {item.timeEnd}
+                                <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                  <Users size={16} />
+                                  <span>Shared with: {plan.shared_by_name || "User"}</span>
+                                </div>
+                                {plan.content && (
+                                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                    <Calendar size={16} />
+                                    <span>Note: {plan.content}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div
+                                className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
+                                  plan.start_time,
+                                  plan.end_time
+                                )}`}
+                              >
+                                {getStatus(plan.start_time, plan.end_time)}: {formatTime(plan.start_time)} - {formatTime(plan.end_time)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Shared with Me</h3>
-                    <div className="flex flex-col gap-4">
-                      {scheduleSharedWithMe.map((item, index) => (
-                        <div
-                          key={index}
-                          className="p-4 border rounded-lg dark:border-gray-700"
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
-                                {item.title}
-                              </h4>
-                              <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                <MapPin size={16} />
-                                <span>{item.location}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                <User size={16} />
-                                <span>Shared by: Project Owner</span>
-                              </div>
-                              {item.note && (
+                  {activeTab === "shared-with-me" && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Shared with Me</h3>
+                      <div className="flex flex-col gap-4">
+                        {filteredPlans.map((plan) => (
+                          <div
+                            key={plan.id}
+                            className="p-4 border rounded-lg dark:border-gray-700"
+                          >
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
+                                  {plan.title}
+                                </h4>
                                 <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                                  <Calendar size={16} />
-                                  <span>Note: {item.note}</span>
+                                  <MapPin size={16} />
+                                  <span>{plan.place || "No location specified"}</span>
                                 </div>
-                              )}
-                            </div>
-                            <div
-                              className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
-                                item.status
-                              )}`}
-                            >
-                              {item.status}: {item.timeStart} - {item.timeEnd}
+                                <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                  <User size={16} />
+                                  <span>Shared by: {plan.shared_by_name || "User"}</span>
+                                </div>
+                                {plan.content && (
+                                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                    <Calendar size={16} />
+                                    <span>Note: {plan.content}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div
+                                className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
+                                  plan.start_time,
+                                  plan.end_time
+                                )}`}
+                              >
+                                {getStatus(plan.start_time, plan.end_time)}: {formatTime(plan.start_time)} - {formatTime(plan.end_time)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {activeTab === "all-plans" && (
+                    <>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Shared by Me</h3>
+                        <div className="flex flex-col gap-4">
+                          {filteredPlans.filter(plan => user && plan.from_user_id === user.id).map((plan) => (
+                            <div
+                              key={plan.id}
+                              className="p-4 border rounded-lg dark:border-gray-700"
+                            >
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
+                                    {plan.title}
+                                  </h4>
+                                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                    <MapPin size={16} />
+                                    <span>{plan.place || "No location specified"}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                    <Users size={16} />
+                                    <span>Shared with: {plan.shared_by_name || "User"}</span>
+                                  </div>
+                                  {plan.content && (
+                                    <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                      <Calendar size={16} />
+                                      <span>Note: {plan.content}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div
+                                  className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
+                                    plan.start_time,
+                                    plan.end_time
+                                  )}`}
+                                >
+                                  {getStatus(plan.start_time, plan.end_time)}: {formatTime(plan.start_time)} - {formatTime(plan.end_time)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Shared with Me</h3>
+                        <div className="flex flex-col gap-4">
+                          {filteredPlans.filter(plan => user && plan.to_user_id === user.id).map((plan) => (
+                            <div
+                              key={plan.id}
+                              className="p-4 border rounded-lg dark:border-gray-700"
+                            >
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <h4 className="text-base font-medium text-blue-600 dark:text-blue-400">
+                                    {plan.title}
+                                  </h4>
+                                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                    <MapPin size={16} />
+                                    <span>{plan.place || "No location specified"}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                    <User size={16} />
+                                    <span>Shared by: {plan.shared_by_name || "User"}</span>
+                                  </div>
+                                  {plan.content && (
+                                    <div className="flex items-center gap-2 text-muted-foreground mt-1">
+                                      <Calendar size={16} />
+                                      <span>Note: {plan.content}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div
+                                  className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(
+                                    plan.start_time,
+                                    plan.end_time
+                                  )}`}
+                                >
+                                  {getStatus(plan.start_time, plan.end_time)}: {formatTime(plan.start_time)} - {formatTime(plan.end_time)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
 
@@ -317,8 +431,6 @@ function SharedPlans() {
               </div>
             </div>
           </div>
-
-          
         </div>
       </SidebarInset>
     </SidebarProvider>
