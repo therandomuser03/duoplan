@@ -12,9 +12,6 @@ import {
 } from "@/components/ui/sidebar";
 import { LifeBuoy, Bell, Plus, StickyNote } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
-import UpcomingEvents from "@/components/upcoming-events";
-import SharedPlans from "@/components/shared-plans";
-import RecentNotes from "@/components/recent-notes";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import TodaySchedule from "@/components/todays-schedule";
 import { Button } from "@/components/ui/button";
@@ -82,10 +79,10 @@ export default async function Dashboard() {
             </div>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <div className="rounded-xl bg-muted/50">
-              <UpcomingEvents />
+              <RecentNotes />
             </div>
             <div className="rounded-xl bg-muted/50">
               <SharedPlans />
@@ -93,7 +90,7 @@ export default async function Dashboard() {
             <div className="rounded-xl bg-muted/50">
               <RecentNotes />
             </div>
-          </div>
+          </div> */}
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:col-span-2 md:min-h-min">
               <WeeklyCalendar />
