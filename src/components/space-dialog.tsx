@@ -30,7 +30,7 @@ import { useUser } from "@clerk/nextjs";
 export function SpaceDialog() {
   const [spaceId, setSpaceId] = useState("");
   const [createdSpaceId, setCreatedSpaceId] = useState("");
-  const [, setShowSpace] = useState(false);
+  // const [showSpace, setShowSpace] = useState(false);
   const [open, setOpen] = useState(false);
 
   const { user } = useUser(); // Get current user
@@ -70,10 +70,14 @@ export function SpaceDialog() {
         user.emailAddresses[0].emailAddress
       );
       toast.success("Joined space successfully!");
-      setShowSpace(true); // Success
+      // setShowSpace(true); 
       setOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to join space.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to join space.");
+      } else {
+        toast.error("Failed to join space.");
+      }
     }
   };
 
