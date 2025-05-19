@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 
-import { Bell, Plus, Search } from "lucide-react";
+import { Bell, Plus, Search, Trash2 } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -17,9 +17,22 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 import { useUser } from "@clerk/nextjs";
 import { createBrowserClient } from "@supabase/ssr";
+
+const colorOptions = [
+  { name: "Blue", class: "bg-blue-500" },
+  { name: "Red", class: "bg-red-500" },
+  { name: "Green", class: "bg-green-500" },
+  { name: "Purple", class: "bg-purple-500" },
+  { name: "Orange", class: "bg-orange-500" },
+  { name: "Yellow", class: "bg-yellow-500" },
+  { name: "Gray", class: "bg-gray-200" },
+];
 
 function Notes() {
   const { user } = useUser();
@@ -44,33 +57,43 @@ function Notes() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
-  // Simulate fetching data from an API
-  useEffect(() => {
+  // For modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteContent, setNewNoteContent] = useState("");
+  const [newNoteStartTime, setNewNoteStartTime] = useState("");
+  const [newNoteEndTime, setNewNoteEndTime] = useState("");
+  const [newNotePlace, setNewNotePlace] = useState("");
+  const [newNoteColor, setNewNoteColor] = useState("bg-blue-500");
+
+  const fetchNotes = async () => {
     if (!user) return;
 
-    const fetchNotes = async () => {
-      setIsLoading(true);
-      try {
-        console.log("Fetching notes for Clerk ID:", user.id); // Log Clerk ID
+    setIsLoading(true);
+    try {
+      console.log("Fetching notes for Clerk ID:", user.id);
 
-        const { data, error } = await supabase
-          .from("notes")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("time_created", { ascending: false });
+      const { data, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("time_created", { ascending: false });
 
-        console.log("Supabase returned:", { data, error });
+      console.log("Supabase returned:", { data, error });
 
-        if (error) {
-          console.error("Supabase query error:", error.message || error);
-          return;
-        }
+      if (error) {
+        console.error("Supabase query error:", error.message || error);
+        toast.error("Failed to load notes");
+        return;
+      }
 
-        if (!data || data.length === 0) {
-          console.warn("No notes returned for this user.");
-        }
+      if (!data || data.length === 0) {
+        console.warn("No notes returned for this user.");
+      }
 
-        const mappedNotes = data.map((note: {
+      const mappedNotes = data.map(
+        (note: {
           id: string;
           title: string;
           content: string;
@@ -88,25 +111,166 @@ function Notes() {
           endTime: note.end_time,
           place: note.place || "—",
           color: note.color_class || "bg-gray-200",
-        }));
+        })
+      );
 
-        setNotes(mappedNotes);
-      } catch (error: unknown) {
-        if (error instanceof Error) {
+      setNotes(mappedNotes);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Unexpected error fetching notes:", error.message);
+        toast.error("Error loading notes");
+      } else {
+        console.error("Unexpected error fetching notes:", error);
+        toast.error("Error loading notes");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch notes on initial load
+  useEffect(() => {
+    if (!user) return;
+    fetchNotes();
+  }, [user]);
+
+  const now = new Date().toISOString();
+
+  const toUTCISOString = (local: string) => {
+    return new Date(local).toISOString(); // interprets local time, converts to UTC
+  };
+
+  // Handle add/edit note submission
+  const handleAddOrEditNote = async () => {
+    if (!newNoteTitle || !newNoteContent || !user) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const noteData = {
+        user_id: user.id,
+        title: newNoteTitle,
+        content: newNoteContent,
+        start_time: toUTCISOString(newNoteStartTime),
+        end_time: toUTCISOString(newNoteEndTime),
+        place: newNotePlace,
+        color_class: newNoteColor,
+        time_created: now,
+        created_at: now,
+      };
+
+      if (editingNote) {
+        // Update existing note
+        const { error } = await supabase
+          .from("notes")
+          .update(noteData)
+          .eq("id", editingNote.id);
+
+        if (error) {
+          console.error("Error updating note:", error);
+          toast.error("Failed to update note");
+          return;
+        }
+
+        toast.success("Note updated successfully");
+      } else {
+        // Create new note
+        const { data, error } = await supabase.from("notes").insert([noteData]);
+        if (error) {
           console.error(
-            "Unexpected error fetching notes:",
-            error.message
+            "Supabase insert error:",
+            JSON.stringify(error, null, 2)
           );
         } else {
-          console.error("Unexpected error fetching notes:", error);
+          console.log("Note created:", data);
         }
-      } finally {
-        setIsLoading(false);
+        toast.success("Note created successfully");
       }
-    };
 
-    fetchNotes();
-  }, [user, supabase]);
+      // Close modal and reset form
+      setIsModalOpen(false);
+      resetForm();
+
+      // Refresh notes list
+      fetchNotes();
+    } catch (error) {
+      console.error("Error in note operation:", error);
+      toast.error("An error occurred");
+    }
+  };
+
+  // Handle note deletion
+  const handleDeleteNote = async () => {
+    if (!editingNote) return;
+
+    try {
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq("id", editingNote.id);
+
+      if (error) {
+        console.error("Error deleting note:", error);
+        toast.error("Failed to delete note");
+        return;
+      }
+
+      toast.success("Note deleted successfully");
+      setIsModalOpen(false);
+      resetForm();
+
+      // Refresh notes list
+      fetchNotes();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast.error("An error occurred");
+    }
+  };
+
+  // Reset form fields
+  const resetForm = () => {
+    setEditingNote(null);
+    setNewNoteTitle("");
+    setNewNoteContent("");
+    setNewNoteStartTime("");
+    setNewNoteEndTime("");
+    setNewNotePlace("");
+    setNewNoteColor("bg-blue-500");
+  };
+
+  // Open modal for creating new note
+  const openAddNoteModal = () => {
+    resetForm();
+
+    // Set default times to now and +1 hour
+    const now = new Date();
+    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+    setNewNoteStartTime(now.toISOString().slice(0, 16));
+    setNewNoteEndTime(oneHourLater.toISOString().slice(0, 16));
+
+    setIsModalOpen(true);
+  };
+
+  // Open modal for editing existing note
+  const openEditNoteModal = (note: Note) => {
+    setEditingNote(note);
+    setNewNoteTitle(note.title);
+    setNewNoteContent(note.content);
+
+    // Convert ISO dates to local datetime-local format
+    const startDate = new Date(note.startTime);
+    const endDate = new Date(note.endTime);
+
+    setNewNoteStartTime(startDate.toISOString().slice(0, 16));
+    setNewNoteEndTime(endDate.toISOString().slice(0, 16));
+
+    setNewNotePlace(note.place === "—" ? "" : note.place);
+    setNewNoteColor(note.color);
+
+    setIsModalOpen(true);
+  };
 
   // Filter notes based on search query and active tab
   const getFilteredNotes = () => {
@@ -121,7 +285,7 @@ function Notes() {
       );
     }
 
-    // Apply tab filter (this would be more sophisticated in a real app)
+    // Apply tab filter
     if (activeTab === "recent") {
       // Show only notes from the last 7 days
       const sevenDaysAgo = new Date();
@@ -131,10 +295,13 @@ function Notes() {
       );
     } else if (activeTab === "favorites") {
       // In a real app, you'd have a favorites field
-      // For now, just show a subset
-      filtered = filtered.filter((note) => [1, 3, 5].includes(Number(note.id)));
+      // For now, just show a subset based on colors
+      filtered = filtered.filter(
+        (note) =>
+          note.color === "bg-yellow-500" || note.color === "bg-orange-500"
+      );
     } else if (activeTab === "date") {
-      // Already sorted by date in the useEffect
+      // Sort by date (already ordered by date in the fetchNotes function)
     }
 
     return filtered;
@@ -152,6 +319,7 @@ function Notes() {
 
   return (
     <SidebarProvider>
+      <Toaster position="top-right" />
       <AppSidebar />
       <SidebarInset className="bg-background">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -167,7 +335,7 @@ function Notes() {
               <Button variant="ghost">
                 <Bell />
               </Button>
-              <Button variant="ghost">
+              <Button variant="ghost" onClick={openAddNoteModal}>
                 <Plus />
               </Button>
               <ModeToggle />
@@ -189,9 +357,15 @@ function Notes() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Button
+              onClick={openAddNoteModal}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Plus className="mr-2 h-4 w-4" /> New Note
+            </Button>
           </div>
 
-          {/* Updated tab UI to match Shared Plans design */}
+          {/* Tab UI */}
           <div className="flex border-b mb-6">
             {tabs.map((tab) => (
               <button
@@ -216,8 +390,15 @@ function Notes() {
           ) : filteredNotes.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-muted-foreground">
-                No notes found. Try adjusting your search criteria.
+                No notes found. Try adjusting your search criteria or create a
+                new note.
               </p>
+              <Button
+                onClick={openAddNoteModal}
+                className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Create New Note
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -225,15 +406,13 @@ function Notes() {
                 <div
                   key={note.id}
                   className="rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => openEditNoteModal(note)}
                 >
                   <div className={`h-2 ${note.color}`} />
                   <div className="p-4 bg-muted/30 dark:bg-muted/20 h-full flex flex-col">
                     <h3 className="text-lg font-medium text-blue-500 mb-1">
                       {note.title}
                     </h3>
-                    {/* <p className="text-xs text-muted-foreground mb-3">
-                      Last edited: {note.lastEdited}
-                    </p> */}
                     <p className="text-xs text-muted-foreground mb-3">
                       Start: {new Date(note.startTime).toLocaleString()}
                     </p>
@@ -252,6 +431,134 @@ function Notes() {
             </div>
           )}
         </div>
+
+        {/* Add/Edit Note Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-background p-6 rounded-md shadow-md w-full max-w-lg">
+              <h2 className="text-xl font-bold mb-4">
+                {editingNote ? "Edit Note" : "Add New Note"}
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    Title
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Note title"
+                    className="w-full"
+                    value={newNoteTitle}
+                    onChange={(e) => setNewNoteTitle(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    Content
+                  </label>
+                  <Textarea
+                    placeholder="Note content"
+                    className="w-full min-h-24"
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">
+                      Start Time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      className="w-full"
+                      value={newNoteStartTime}
+                      onChange={(e) => setNewNoteStartTime(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-sm font-medium">
+                      End Time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      className="w-full"
+                      value={newNoteEndTime}
+                      onChange={(e) => setNewNoteEndTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    Place
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Associated location"
+                    className="w-full"
+                    value={newNotePlace}
+                    onChange={(e) => setNewNotePlace(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1 text-sm font-medium">
+                    Color
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {colorOptions.map((color) => (
+                      <button
+                        key={color.class}
+                        type="button"
+                        className={`w-8 h-8 rounded-full ${color.class} ${
+                          newNoteColor === color.class
+                            ? "ring-2 ring-offset-2 ring-blue-600"
+                            : ""
+                        }`}
+                        onClick={() => setNewNoteColor(color.class)}
+                        title={color.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mt-6">
+                  <Button
+                    onClick={handleAddOrEditNote}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    {editingNote ? "Update Note" : "Save Note"}
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      resetForm();
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+
+                {editingNote && (
+                  <Button
+                    onClick={handleDeleteNote}
+                    variant="destructive"
+                    className="w-full mt-2"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete Note
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </SidebarInset>
     </SidebarProvider>
   );

@@ -1,8 +1,12 @@
+// calendar/page.tsx
+
 "use client";
 
 import React from "react";
+import { useUser } from "@clerk/nextjs";
 import { format, startOfWeek, addDays, isToday } from "date-fns";
 import { toast } from "sonner";
+import { createClient } from "@supabase/supabase-js";
 
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -18,74 +22,235 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 
+// Initialize Supabase client
+// Replace these with your actual Supabase URL and anon key from environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 type EventType = {
+  id?: string;
   title: string;
   date: string;
   color?: string;
+  content?: string;
+  user_id?: string;
 };
 
 function FullCalendar() {
+  const { user } = useUser();
   const [date, setDate] = React.useState<Date | undefined>(new Date());
-
-  const [events, setEvents] = React.useState<EventType[]>([
-    { date: "2025-05-16", title: "Team Meeting", color: "bg-blue-500" },
-    { date: "2025-05-16", title: "Dinner", color: "bg-purple-500" },
-    { date: "2025-05-22", title: "Birthday", color: "bg-orange-500" },
-  ]);
-
+  const [events, setEvents] = React.useState<EventType[]>([]);
   const [viewMode, setViewMode] = React.useState<"month" | "week">("month");
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selectedDateForEvent, setSelectedDateForEvent] =
     React.useState<Date | null>(null);
   const [newEventTitle, setNewEventTitle] = React.useState("");
+  const [newEventContent, setNewEventContent] = React.useState("");
   const [editingEvent, setEditingEvent] = React.useState<EventType | null>(
     null
   );
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleAddOrEditEvent = () => {
-    if (!newEventTitle || !selectedDateForEvent) return;
+  // Get current user information
+  const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
 
-    const newEvent = {
-      title: newEventTitle,
-      date: format(selectedDateForEvent, "yyyy-MM-dd"),
-      color: editingEvent?.color || "bg-green-600",
+  // Fetch current user on component mount
+  React.useEffect(() => {
+    if (user) {
+      setCurrentUserId(user.id);
+    }
+  }, [user]);
+
+  // Fetch notes from Supabase when the component mounts
+  React.useEffect(() => {
+    const fetchNotes = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("notes")
+          .select("*")
+          .order("time_created", { ascending: false });
+
+        if (error) {
+          toast.error("Failed to fetch notes");
+          console.error("Error fetching notes:", error);
+        } else {
+          // Map Supabase data to our EventType format
+          const formattedEvents = data.map((note) => ({
+            id: note.id,
+            title: note.title,
+            content: note.content,
+            date: format(new Date(note.start_time), "yyyy-MM-dd"),
+            color: note.color_class || "bg-green-600",
+            user_id: note.user_id,
+          }));
+
+          setEvents(formattedEvents);
+        }
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+        toast.error("Failed to load notes");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    if (editingEvent) {
-      // Edit mode
-      setEvents((prev) =>
-        prev.map((event) => (event === editingEvent ? newEvent : event))
-      );
-      toast.success(`Event "${newEventTitle}" updated successfully`, {
-        description: `Date: ${format(selectedDateForEvent, "MMM dd, yyyy")}`,
-      });
-    } else {
-      // Add mode
-      setEvents((prev) => [...prev, newEvent]);
-      toast.success(`Event "${newEventTitle}" added to calendar`, {
-        description: `Date: ${format(selectedDateForEvent, "MMM dd, yyyy")}`,
-      });
-    }
+    fetchNotes();
+  }, []);
 
-    setIsModalOpen(false);
-    setEditingEvent(null);
-    setNewEventTitle("");
-    setSelectedDateForEvent(null);
+  const handleAddOrEditEvent = async () => {
+    if (!newEventTitle || !selectedDateForEvent) return;
+
+    setIsLoading(true);
+
+    try {
+      const eventDate = format(selectedDateForEvent, "yyyy-MM-dd");
+      const now = new Date();
+
+      // Format the date string in the format expected by Supabase
+      const formattedStartTime = `${eventDate}T00:00:00`;
+      const formattedEndTime = `${eventDate}T23:59:59`;
+
+      const newEvent = {
+        title: newEventTitle,
+        content: newEventContent,
+        date: eventDate,
+        color: editingEvent?.color || "bg-green-600",
+      };
+
+      if (editingEvent && editingEvent.id) {
+        // Update existing note in Supabase
+        const { error } = await supabase
+          .from("notes")
+          .update({
+            title: newEventTitle,
+            content: newEventContent,
+            start_time: formattedStartTime,
+            end_time: formattedEndTime,
+            color_class: newEvent.color,
+            updated_at: now.toISOString(),
+          })
+          .eq("id", editingEvent.id);
+
+        if (error) {
+          toast.error("Failed to update note");
+          console.error("Error updating note:", error);
+          return;
+        }
+
+        // Update local state
+        setEvents((prev) =>
+          prev.map((event) =>
+            event.id === editingEvent.id
+              ? {
+                  ...newEvent,
+                  id: editingEvent.id,
+                  user_id: editingEvent.user_id,
+                }
+              : event
+          )
+        );
+
+        toast.success(`Note "${newEventTitle}" updated successfully`, {
+          description: `Date: ${format(selectedDateForEvent, "MMM dd, yyyy")}`,
+        });
+      } else {
+        // Add new note to Supabase
+        const { data, error } = await supabase
+          .from("notes")
+          .insert([
+            {
+              title: newEventTitle,
+              content: newEventContent,
+              time_created: now.toISOString(),
+              start_time: formattedStartTime,
+              end_time: formattedEndTime,
+              place: "", // Default empty place
+              color_class: newEvent.color,
+              user_id: currentUserId, // Use the current user's ID
+              created_at: now.toISOString(),
+            },
+          ])
+          .select();
+
+        if (error) {
+          toast.error("Failed to add note");
+          console.error("Error adding note:", error);
+          return;
+        }
+
+        // Add the new event to local state with the ID from Supabase
+        if (data && data.length > 0) {
+          const addedNote = data[0];
+          setEvents((prev) => [
+            ...prev,
+            {
+              ...newEvent,
+              id: addedNote.id,
+              user_id: addedNote.user_id,
+            },
+          ]);
+
+          toast.success(`Note "${newEventTitle}" added to calendar`, {
+            description: `Date: ${format(
+              selectedDateForEvent,
+              "MMM dd, yyyy"
+            )}`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast.error("Failed to save note");
+    } finally {
+      setIsLoading(false);
+      setIsModalOpen(false);
+      setEditingEvent(null);
+      setNewEventTitle("");
+      setNewEventContent("");
+      setSelectedDateForEvent(null);
+    }
   };
 
-  const handleDeleteEvent = () => {
-    if (!editingEvent) return;
-    
-    setEvents((prev) => prev.filter((e) => e !== editingEvent));
-    
-    toast.error(`Event "${editingEvent.title}" deleted`, {
-      description: `Removed from ${format(new Date(editingEvent.date), "MMM dd, yyyy")}`,
-    });
-    
-    setIsModalOpen(false);
-    setEditingEvent(null);
-    setNewEventTitle("");
-    setSelectedDateForEvent(null);
+  const handleDeleteEvent = async () => {
+    if (!editingEvent || !editingEvent.id) return;
+
+    setIsLoading(true);
+
+    try {
+      // Delete note from Supabase
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq("id", editingEvent.id);
+
+      if (error) {
+        toast.error("Failed to delete note");
+        console.error("Error deleting note:", error);
+        return;
+      }
+
+      // Update local state
+      setEvents((prev) => prev.filter((e) => e.id !== editingEvent.id));
+
+      toast.error(`Note "${editingEvent.title}" deleted`, {
+        description: `Removed from ${format(
+          new Date(editingEvent.date),
+          "MMM dd, yyyy"
+        )}`,
+      });
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast.error("Failed to delete note");
+    } finally {
+      setIsLoading(false);
+      setIsModalOpen(false);
+      setEditingEvent(null);
+      setNewEventTitle("");
+      setNewEventContent("");
+      setSelectedDateForEvent(null);
+    }
   };
 
   return (
@@ -119,16 +284,17 @@ function FullCalendar() {
           <div className="flex gap-4 mb-4 flex-wrap justify-end">
             <Button
               onClick={() => {
-                setSelectedDateForEvent(date ?? null);
+                setSelectedDateForEvent(date ?? new Date());
                 setIsModalOpen(true);
               }}
               className="flex items-center gap-2 px-3 py-2 rounded-md bg-secondary hover:bg-primary text-primary hover:text-secondary text-sm"
+              disabled={isLoading}
             >
               <Plus className="w-4 h-4" />
-              Add Event
+              Add Note
             </Button>
 
-            <Button 
+            <Button
               variant="secondary"
               onClick={() => {
                 setViewMode("month");
@@ -139,10 +305,11 @@ function FullCalendar() {
                   ? "bg-primary hover:bg-secondary text-secondary hover:text-primary border-primary"
                   : "bg-muted hover:bg-neutral-500 hover:text-neutral-900 text-muted-foreground border-muted"
               }`}
+              disabled={isLoading}
             >
               Month
             </Button>
-            <Button 
+            <Button
               variant="secondary"
               onClick={() => {
                 setViewMode("week");
@@ -153,6 +320,7 @@ function FullCalendar() {
                   ? "bg-primary hover:bg-secondary text-secondary hover:text-primary border-primary"
                   : "bg-muted hover:bg-neutral-500 hover:text-neutral-900 text-muted-foreground border-muted"
               }`}
+              disabled={isLoading}
             >
               Week
             </Button>
@@ -160,7 +328,11 @@ function FullCalendar() {
 
           {/* Calendar */}
           <div className="flex-1 w-full overflow-x-hidden">
-            {viewMode === "month" ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : viewMode === "month" ? (
               <Calendar
                 mode="single"
                 selected={date}
@@ -190,7 +362,9 @@ function FullCalendar() {
                     return (
                       <div
                         className={`w-full h-full flex flex-col items-start justify-start p-2 gap-1 text-sm rounded-md ${
-                          isToday(date) ? "bg-accent border-2 border-primary" : ""
+                          isToday(date)
+                            ? "bg-accent border-2 border-primary"
+                            : ""
                         }`}
                       >
                         <div className="font-medium">{format(date, "d")}</div>
@@ -200,9 +374,10 @@ function FullCalendar() {
                             onClick={() => {
                               setEditingEvent(event);
                               setNewEventTitle(event.title);
+                              setNewEventContent(event.content || "");
                               setSelectedDateForEvent(new Date(event.date));
                               setIsModalOpen(true);
-                              toast("Editing event", {
+                              toast("Editing note", {
                                 description: event.title,
                               });
                             }}
@@ -243,9 +418,10 @@ function FullCalendar() {
                           onClick={() => {
                             setEditingEvent(event);
                             setNewEventTitle(event.title);
+                            setNewEventContent(event.content || "");
                             setSelectedDateForEvent(new Date(event.date));
                             setIsModalOpen(true);
-                            toast("Editing event", {
+                            toast("Editing note", {
                               description: event.title,
                             });
                           }}
@@ -266,15 +442,24 @@ function FullCalendar() {
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-secondary p-6 rounded-md shadow-md w-full max-w-sm">
                 <h2 className="text-xl font-bold mb-4">
-                  {editingEvent ? "Edit Event" : "Add Event"}
+                  {editingEvent ? "Edit Note" : "Add Note"}
                 </h2>
 
                 <input
                   type="text"
-                  placeholder="Event title"
+                  placeholder="Note title"
                   className="w-full mb-3 border px-3 py-2 rounded"
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
+                  disabled={isLoading}
+                />
+
+                <textarea
+                  placeholder="Note content (optional)"
+                  className="w-full mb-3 border px-3 py-2 rounded h-24"
+                  value={newEventContent}
+                  onChange={(e) => setNewEventContent(e.target.value)}
+                  disabled={isLoading}
                 />
 
                 <input
@@ -288,21 +473,40 @@ function FullCalendar() {
                   onChange={(e) =>
                     setSelectedDateForEvent(new Date(e.target.value))
                   }
+                  disabled={isLoading}
                 />
 
                 <Button
                   onClick={handleAddOrEditEvent}
-                  className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+                  className="bg-blue-600 text-white px-4 py-2 rounded w-full disabled:opacity-50"
+                  disabled={isLoading}
                 >
-                  {editingEvent ? "Update Event" : "Save Event"}
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                      {editingEvent ? "Updating..." : "Saving..."}
+                    </span>
+                  ) : editingEvent ? (
+                    "Update Note"
+                  ) : (
+                    "Save Note"
+                  )}
                 </Button>
 
                 {editingEvent && (
                   <Button
                     onClick={handleDeleteEvent}
-                    className="mt-2 text-sm text-red-600 w-full"
+                    className="mt-2 text-sm text-red-600 w-full disabled:opacity-50"
+                    disabled={isLoading}
                   >
-                    Delete Event
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-600 mr-2"></span>
+                        Deleting...
+                      </span>
+                    ) : (
+                      "Delete Note"
+                    )}
                   </Button>
                 )}
 
@@ -311,10 +515,12 @@ function FullCalendar() {
                     setIsModalOpen(false);
                     setEditingEvent(null);
                     setNewEventTitle("");
+                    setNewEventContent("");
                     setSelectedDateForEvent(null);
                     toast.info("Action cancelled");
                   }}
-                  className="mt-2 text-sm text-gray-500 w-full"
+                  className="mt-2 text-sm text-gray-500 w-full disabled:opacity-50"
+                  disabled={isLoading}
                 >
                   Cancel
                 </Button>

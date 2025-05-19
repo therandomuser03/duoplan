@@ -213,7 +213,7 @@ const TodaySchedule = () => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="myNotes">My Notes</TabsTrigger>
             <TabsTrigger value="partnerNotes">
-              {partnerUser ? `Notes by ${partnerUser.first_name}` : "Partner's Notes"}
+              {partnerUser ? `Notes by ${partnerUser.first_name || partnerUser.username || 'Partner'}` : "Partner's Notes"}
             </TabsTrigger>
           </TabsList>
           
