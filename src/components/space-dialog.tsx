@@ -17,7 +17,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Copy, Link } from "lucide-react";
-import { Space } from "@/components/space";
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +30,7 @@ import { useUser } from "@clerk/nextjs";
 export function SpaceDialog() {
   const [spaceId, setSpaceId] = useState("");
   const [createdSpaceId, setCreatedSpaceId] = useState("");
-  const [showSpace, setShowSpace] = useState(false);
+  const [, setShowSpace] = useState(false);
   const [open, setOpen] = useState(false);
 
   const { user } = useUser(); // Get current user
