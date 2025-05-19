@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import SyncUserProfile from '@/components/auth/SyncUserProfile';
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from 'next/headers';
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,7 +53,8 @@ const {
             disableTransitionOnChange
           >
             {children}
-          </ThemeProvider>
+            <Toaster richColors position="top-right" />
+            </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

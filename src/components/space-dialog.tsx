@@ -18,7 +18,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Copy, Link } from "lucide-react";
 import { Space } from "@/components/space";
-
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@clerk/nextjs";
 
@@ -26,6 +32,7 @@ export function SpaceDialog() {
   const [spaceId, setSpaceId] = useState("");
   const [createdSpaceId, setCreatedSpaceId] = useState("");
   const [showSpace, setShowSpace] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const { user } = useUser(); // Get current user
 
@@ -39,9 +46,11 @@ export function SpaceDialog() {
       );
       setCreatedSpaceId(space.id);
       setSpaceId(space.id);
-      setShowSpace(true);
+      // don't show <Space /> on creation
+      toast.success("Space created successfully!");
     } catch (error) {
       console.error("Failed to create space:", error);
+      toast.error("Failed to create space.");
     }
   };
 
@@ -51,7 +60,7 @@ export function SpaceDialog() {
       !user?.id ||
       !user?.emailAddresses?.[0]?.emailAddress
     ) {
-      console.error("Missing space ID or user info");
+      toast.error("Missing space ID or user info");
       return;
     }
 
@@ -61,14 +70,16 @@ export function SpaceDialog() {
         user.id,
         user.emailAddresses[0].emailAddress
       );
-      setShowSpace(true); // Only show space UI after successful join
-    } catch (error) {
-      console.error("Failed to join space:", error);
+      toast.success("Joined space successfully!");
+      setShowSpace(true); // Success
+      setOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to join space.");
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost">
           <Link className="mr-1 h-4 w-4 text-muted-foreground" />
@@ -77,66 +88,69 @@ export function SpaceDialog() {
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Spaces</DialogTitle>
-          <DialogDescription>
-            Create a space to collaborate or join an existing one using a link.
-          </DialogDescription>
-        </DialogHeader>
+        <TooltipProvider>
+          <DialogHeader>
+            <DialogTitle>Spaces</DialogTitle>
+            <DialogDescription>
+              Create a space to collaborate or join an existing one using a
+              link.
+            </DialogDescription>
+          </DialogHeader>
 
-        <Tabs defaultValue="create" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="create">Create</TabsTrigger>
-            <TabsTrigger value="join">Join</TabsTrigger>
-          </TabsList>
+          <Tabs defaultValue="create" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="create">Create</TabsTrigger>
+              <TabsTrigger value="join">Join</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="create">
-            <div className="flex flex-col gap-2">
-              <Button onClick={generateSpaceId}>Generate Space</Button>
-              {createdSpaceId && (
-                <div className="flex items-center gap-2">
-                  <Input
-                    readOnly
-                    value={`https://duoplan.vercel.app/space/${createdSpaceId}`}
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    onClick={() =>
-                      navigator.clipboard.writeText(
-                        `https://duoplan.vercel.app/space/${createdSpaceId}`
-                      )
-                    }
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </TabsContent>
+            <TabsContent value="create">
+              <div className="flex flex-col gap-2">
+                <Button onClick={generateSpaceId}>Generate Space</Button>
+                {createdSpaceId && (
+                  <div className="flex items-center gap-2">
+                    <Input readOnly value={`${createdSpaceId}`} />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          size="icon"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${createdSpaceId}`);
+                            toast.success("Link copied to clipboard!");
+                          }}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy space link</TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
 
-          <TabsContent value="join">
-            <div className="flex flex-col gap-2">
-              <Input
-                placeholder="Enter space ID or link"
-                value={spaceId}
-                onChange={(e) => setSpaceId(e.target.value)}
-              />
-              <Button onClick={handleJoin}>Join Space</Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="join">
+              <div className="flex flex-col gap-2">
+                <Input
+                  placeholder="Enter space ID or link"
+                  value={spaceId}
+                  onChange={(e) => setSpaceId(e.target.value)}
+                />
+                <Button onClick={handleJoin}>Join Space</Button>
+              </div>
+            </TabsContent>
+          </Tabs>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary">Close</Button>
-          </DialogClose>
-        </DialogFooter>
-
-        {showSpace && (
-          <Space spaceId={spaceId} onClose={() => setShowSpace(false)} />
-        )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="secondary">Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </TooltipProvider>
       </DialogContent>
+      {/* {showSpace && (
+        <Space spaceId={spaceId} onClose={() => setShowSpace(false)} />
+      )} */}
     </Dialog>
   );
 }
@@ -166,11 +180,14 @@ export async function createSpace(userId: string, email: string) {
   return data;
 }
 
-export async function joinSpace(spaceId: string, userId: string, email: string) {
-  // First get the space to verify it exists and get its token
+export async function joinSpace(
+  spaceId: string,
+  userId: string,
+  email: string
+) {
   const { data: space, error: fetchError } = await supabase
     .from("spaces")
-    .select("token")
+    .select("user_b_id, token")
     .eq("id", spaceId)
     .single();
 
@@ -178,15 +195,17 @@ export async function joinSpace(spaceId: string, userId: string, email: string) 
     throw new Error("Space not found");
   }
 
-  // Then update the space with user B info
+  if (space.user_b_id) {
+    throw new Error("This space already has a second participant.");
+  }
+
   const { data, error } = await supabase
     .from("spaces")
     .update({
       user_b_id: userId,
       user_b_email: email,
     })
-    .eq("id", spaceId)
-    .is("user_b_id", null); // Prevent double joins
+    .eq("id", spaceId);
 
   if (error) throw error;
   return data;
@@ -213,4 +232,3 @@ export async function getNotesInSpace(spaceId: string) {
   if (error) throw error;
   return notes;
 }
-
