@@ -148,9 +148,6 @@ export function SpaceDialog() {
           </DialogFooter>
         </TooltipProvider>
       </DialogContent>
-      {/* {showSpace && (
-        <Space spaceId={spaceId} onClose={() => setShowSpace(false)} />
-      )} */}
     </Dialog>
   );
 }
