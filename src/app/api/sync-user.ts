@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const user = await client.users.getUser(userId);
 
     // Check if user already exists in Supabase
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existing } = await supabase
       .from("users")
       .select("id")
       .eq("id", user.id)
@@ -49,8 +49,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.status(200).json({ message: "User synced to Supabase" });
-  } catch (err: any) {
-    console.error("Error syncing user:", err.message || err);
+  } catch (err: unknown) {
+    const errorMessage =
+      err instanceof Error ? err.message : String(err);
+    console.error("Error syncing user:", errorMessage);
     res.status(500).json({ error: "Failed to sync user" });
   }
 }

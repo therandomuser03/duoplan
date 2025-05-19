@@ -105,18 +105,25 @@ function SharedPlans() {
         }
 
         setSharedPlans(allData as SharedPlan[]);
-      } catch (error: any) {
-        console.error(
-          "Unexpected error fetching shared plans:",
-          error.message || error
-        );
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(
+            "Unexpected error fetching shared plans:",
+            error.message
+          );
+        } else {
+          console.error(
+            "Unexpected error fetching shared plans:",
+            error
+          );
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSharedPlans();
-  }, [user]);
+  }, [user, supabase]);
 
   // Filter plans based on active tab
   const getFilteredPlans = () => {

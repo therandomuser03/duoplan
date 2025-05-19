@@ -27,10 +27,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+const supabase = createServerComponentClient({ cookies });
+const { 
+  // You can destructure session or other properties here if needed
+  // session,
+} = await supabase.auth.getSession();
 
   return (
     <ClerkProvider

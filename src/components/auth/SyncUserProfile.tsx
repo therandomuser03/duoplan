@@ -43,7 +43,7 @@ export default function SyncUserProfile() {
     };
 
     syncUser();
-  }, [isSignedIn, user]);
+  }, [isSignedIn, user, supabase]);
 
   return null;
 }

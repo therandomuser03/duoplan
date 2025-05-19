@@ -2,18 +2,15 @@
 
 import { RedirectToSignIn } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
-import { AppSidebar } from "@/components/app-sidebar"
-import {
-  Breadcrumb,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+import { AppSidebar } from "@/components/app-sidebar";
+import { Breadcrumb, BreadcrumbPage } from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Bell, Plus } from "lucide-react";
+} from "@/components/ui/sidebar";
+import { LifeBuoy, Bell, Plus, StickyNote } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import UpcomingEvents from "@/components/upcoming-events";
 import SharedPlans from "@/components/shared-plans";
@@ -21,6 +18,15 @@ import RecentNotes from "@/components/recent-notes";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import TodaySchedule from "@/components/todays-schedule";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { SpaceDialog } from "@/components/space-dialog";
 
 export default async function Dashboard() {
   const { userId } = await auth();
@@ -38,16 +44,40 @@ export default async function Dashboard() {
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
-              <BreadcrumbPage className="text-xl">Dashboard</BreadcrumbPage>
+                <BreadcrumbPage className="text-xl">Dashboard</BreadcrumbPage>
               </Breadcrumb>
             </div>
             <div className="flex items-center gap-4">
               <Button variant="ghost">
                 <Bell />
               </Button>
-              <Button variant="ghost">
-                <Plus />
-              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost">
+                    <Plus />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent>
+                  <DropdownMenuItem asChild>
+                    <SpaceDialog />
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem>
+                    <StickyNote className="mr-2 h-4 w-4 text-muted-foreground" />
+                    Create a new note
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem>
+                    <LifeBuoy className="mr-2 h-4 w-4 text-muted-foreground" />
+                    Help & Support
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <ModeToggle />
             </div>
           </div>
@@ -55,25 +85,25 @@ export default async function Dashboard() {
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <div className="rounded-xl bg-muted/50">
-            <UpcomingEvents />
+              <UpcomingEvents />
             </div>
             <div className="rounded-xl bg-muted/50">
-            <SharedPlans />
+              <SharedPlans />
             </div>
             <div className="rounded-xl bg-muted/50">
-            <RecentNotes />
+              <RecentNotes />
             </div>
           </div>
-            <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-              <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:col-span-2 md:min-h-min">
+          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+            <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:col-span-2 md:min-h-min">
               <WeeklyCalendar />
-              </div>
-              <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:col-span-1 md:min-h-min">
-              <TodaySchedule />
-              </div>
             </div>
+            <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:col-span-1 md:min-h-min">
+              <TodaySchedule />
+            </div>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

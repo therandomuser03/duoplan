@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 
-import { Bell, Plus, Search, Settings } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -70,7 +70,16 @@ function Notes() {
           console.warn("No notes returned for this user.");
         }
 
-        const mappedNotes = data.map((note: any) => ({
+        const mappedNotes = data.map((note: {
+          id: string;
+          title: string;
+          content: string;
+          time_created: string;
+          start_time: string;
+          end_time: string;
+          place?: string;
+          color_class?: string;
+        }) => ({
           id: note.id,
           title: note.title,
           content: note.content,
@@ -82,18 +91,22 @@ function Notes() {
         }));
 
         setNotes(mappedNotes);
-      } catch (error: any) {
-        console.error(
-          "Unexpected error fetching notes:",
-          error.message || error
-        );
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(
+            "Unexpected error fetching notes:",
+            error.message
+          );
+        } else {
+          console.error("Unexpected error fetching notes:", error);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchNotes();
-  }, [user]);
+  }, [user, supabase]);
 
   // Filter notes based on search query and active tab
   const getFilteredNotes = () => {

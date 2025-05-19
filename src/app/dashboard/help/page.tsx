@@ -10,7 +10,7 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbPage } from "@/components/ui/breadcrumb";
-import { Bell, Plus, Search, HelpCircle } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Calendar, FileText, Users, Book, Settings } from "lucide-react";
 

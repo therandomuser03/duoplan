@@ -8,14 +8,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''; // Use service role key for admin operations
 
 // Create middleware function that runs on auth state changes
-type ClerkAuth = {
-  userId?: string;
-  [key: string]: any;
-};
+import type { ClerkMiddlewareAuth } from '@clerk/nextjs/server';
 
-const middleware = clerkMiddleware(async (auth: ClerkAuth, req: any) => {
+const middleware = clerkMiddleware(async (auth: ClerkMiddlewareAuth) => {
   // You may need to adjust how you get the userId depending on your Clerk setup
-  const { userId } = auth || {};
+  const userId = (await auth()).userId;
 
   // Only proceed if the user is signed in
   if (!userId) return;
