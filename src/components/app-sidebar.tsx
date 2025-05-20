@@ -7,7 +7,6 @@ import {
   House,
   Info,
   LifeBuoy,
-  Link,
   LucideCalendarDays,
   Send,
 } from "lucide-react";
@@ -46,11 +45,6 @@ const data = {
       title: "Notes",
       url: "/dashboard/notes",
       icon: BookOpen,
-    },
-    {
-      title: "Shared Plans",
-      url: "/dashboard/shared-plans",
-      icon: Link,
     },
     {
       title: "Help",

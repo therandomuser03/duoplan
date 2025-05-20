@@ -1,9 +1,6 @@
-// notes/page.tsx
-
 "use client";
 
 import React, { useState, useEffect } from "react";
-
 import { Bell, Plus, Search, Trash2 } from "lucide-react";
 import {
   SidebarInset,
@@ -20,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-
 import { useUser } from "@clerk/nextjs";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -50,6 +46,8 @@ function Notes() {
     endTime: string;
     place: string;
     color: string;
+    isShared?: boolean;
+    sharedByName?: string;
   };
 
   const [notes, setNotes] = useState<Note[]>([]);
@@ -57,7 +55,6 @@ function Notes() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
-  // For modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [newNoteTitle, setNewNoteTitle] = useState("");
@@ -67,80 +64,82 @@ function Notes() {
   const [newNotePlace, setNewNotePlace] = useState("");
   const [newNoteColor, setNewNoteColor] = useState("bg-blue-500");
 
+  const now = new Date().toISOString();
+  const toUTCISOString = (local: string) => new Date(local).toISOString();
+
+  const fetchCurrentSpaceId = async (): Promise<string | null> => {
+  if (!user?.id) {
+    console.warn("User not ready yet.");
+    return null;
+  }
+
+  const userId = user.id;
+  const orClause = `user_a_id.eq.${userId},user_b_id.eq.${userId}`;
+
+  const { data, error } = await supabase
+    .from("spaces")
+    .select("id")
+    .or(orClause)
+    .limit(1); // 👈 Only get the first matching space
+
+  if (error) {
+    console.error("Supabase query error:", JSON.stringify(error, null, 2));
+    return null;
+  }
+
+  if (!data || data.length === 0) {
+    console.warn("No space found for user:", userId);
+    toast.error("No space found. Please create or join a space.");
+    return null;
+  }
+
+  return data[0].id; // ✅ Use the first matching space
+};
+
+
   const fetchNotes = async () => {
     if (!user) return;
-
     setIsLoading(true);
+
     try {
-      console.log("Fetching notes for Clerk ID:", user.id);
-
-      const { data, error } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("time_created", { ascending: false });
-
-      console.log("Supabase returned:", { data, error });
-
-      if (error) {
-        console.error("Supabase query error:", error.message || error);
-        toast.error("Failed to load notes");
+      const spaceId = await fetchCurrentSpaceId();
+      if (!spaceId) {
+        setNotes([]);
         return;
       }
 
-      if (!data || data.length === 0) {
-        console.warn("No notes returned for this user.");
-      }
+      const { data: notesData, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("space_id", spaceId);
 
-      const mappedNotes = data.map(
-        (note: {
-          id: string;
-          title: string;
-          content: string;
-          time_created: string;
-          start_time: string;
-          end_time: string;
-          place?: string;
-          color_class?: string;
-        }) => ({
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          timeCreated: note.time_created,
-          startTime: note.start_time,
-          endTime: note.end_time,
-          place: note.place || "—",
-          color: note.color_class || "bg-gray-200",
-        })
-      );
+      if (error) throw error;
+
+      const mappedNotes = (notesData || []).map((note) => ({
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        timeCreated: note.time_created,
+        startTime: note.start_time,
+        endTime: note.end_time,
+        place: note.place || "—",
+        color: note.color_class || "bg-gray-200",
+      }));
 
       setNotes(mappedNotes);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Unexpected error fetching notes:", error.message);
-        toast.error("Error loading notes");
-      } else {
-        console.error("Unexpected error fetching notes:", error);
-        toast.error("Error loading notes");
-      }
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      toast.error("Unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch notes on initial load
   useEffect(() => {
-    if (!user) return;
-    fetchNotes();
+    console.log("User info:", user); // helpful for debugging
+    if (user) fetchNotes();
   }, [user]);
 
-  const now = new Date().toISOString();
-
-  const toUTCISOString = (local: string) => {
-    return new Date(local).toISOString(); // interprets local time, converts to UTC
-  };
-
-  // Handle add/edit note submission
   const handleAddOrEditNote = async () => {
     if (!newNoteTitle || !newNoteContent || !user) {
       toast.error("Please fill in all required fields");
@@ -148,6 +147,12 @@ function Notes() {
     }
 
     try {
+      const spaceId = await fetchCurrentSpaceId();
+      if (!spaceId) {
+        toast.error("No space found. Cannot save note.");
+        return;
+      }
+
       const noteData = {
         user_id: user.id,
         title: newNoteTitle,
@@ -158,49 +163,31 @@ function Notes() {
         color_class: newNoteColor,
         time_created: now,
         created_at: now,
+        space_id: spaceId,
       };
 
       if (editingNote) {
-        // Update existing note
         const { error } = await supabase
           .from("notes")
           .update(noteData)
           .eq("id", editingNote.id);
-
-        if (error) {
-          console.error("Error updating note:", error);
-          toast.error("Failed to update note");
-          return;
-        }
-
+        if (error) throw error;
         toast.success("Note updated successfully");
       } else {
-        // Create new note
-        const { data, error } = await supabase.from("notes").insert([noteData]);
-        if (error) {
-          console.error(
-            "Supabase insert error:",
-            JSON.stringify(error, null, 2)
-          );
-        } else {
-          console.log("Note created:", data);
-        }
+        const { error } = await supabase.from("notes").insert([noteData]);
+        if (error) throw error;
         toast.success("Note created successfully");
       }
 
-      // Close modal and reset form
       setIsModalOpen(false);
       resetForm();
-
-      // Refresh notes list
       fetchNotes();
     } catch (error) {
-      console.error("Error in note operation:", error);
+      console.error("Error saving note:", error);
       toast.error("An error occurred");
     }
   };
 
-  // Handle note deletion
   const handleDeleteNote = async () => {
     if (!editingNote) return;
 
@@ -209,18 +196,11 @@ function Notes() {
         .from("notes")
         .delete()
         .eq("id", editingNote.id);
-
-      if (error) {
-        console.error("Error deleting note:", error);
-        toast.error("Failed to delete note");
-        return;
-      }
+      if (error) throw error;
 
       toast.success("Note deleted successfully");
       setIsModalOpen(false);
       resetForm();
-
-      // Refresh notes list
       fetchNotes();
     } catch (error) {
       console.error("Error deleting note:", error);
@@ -228,7 +208,6 @@ function Notes() {
     }
   };
 
-  // Reset form fields
   const resetForm = () => {
     setEditingNote(null);
     setNewNoteTitle("");
@@ -239,44 +218,28 @@ function Notes() {
     setNewNoteColor("bg-blue-500");
   };
 
-  // Open modal for creating new note
   const openAddNoteModal = () => {
     resetForm();
-
-    // Set default times to now and +1 hour
     const now = new Date();
     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-
     setNewNoteStartTime(now.toISOString().slice(0, 16));
     setNewNoteEndTime(oneHourLater.toISOString().slice(0, 16));
-
     setIsModalOpen(true);
   };
 
-  // Open modal for editing existing note
   const openEditNoteModal = (note: Note) => {
     setEditingNote(note);
     setNewNoteTitle(note.title);
     setNewNoteContent(note.content);
-
-    // Convert ISO dates to local datetime-local format
-    const startDate = new Date(note.startTime);
-    const endDate = new Date(note.endTime);
-
-    setNewNoteStartTime(startDate.toISOString().slice(0, 16));
-    setNewNoteEndTime(endDate.toISOString().slice(0, 16));
-
+    setNewNoteStartTime(new Date(note.startTime).toISOString().slice(0, 16));
+    setNewNoteEndTime(new Date(note.endTime).toISOString().slice(0, 16));
     setNewNotePlace(note.place === "—" ? "" : note.place);
     setNewNoteColor(note.color);
-
     setIsModalOpen(true);
   };
 
-  // Filter notes based on search query and active tab
   const getFilteredNotes = () => {
     let filtered = notes;
-
-    // Apply search filter
     if (searchQuery.trim() !== "") {
       filtered = filtered.filter(
         (note) =>
@@ -284,30 +247,21 @@ function Notes() {
           note.content.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Apply tab filter
     if (activeTab === "recent") {
-      // Show only notes from the last 7 days
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       filtered = filtered.filter(
         (note) => new Date(note.timeCreated) > sevenDaysAgo
       );
     } else if (activeTab === "favorites") {
-      // In a real app, you'd have a favorites field
-      // For now, just show a subset based on colors
       filtered = filtered.filter(
         (note) =>
           note.color === "bg-yellow-500" || note.color === "bg-orange-500"
       );
-    } else if (activeTab === "date") {
-      // Sort by date (already ordered by date in the fetchNotes function)
     }
-
     return filtered;
   };
 
-  // Define tabs
   const tabs = [
     { id: "all", label: "All Notes" },
     { id: "recent", label: "Recent" },
@@ -425,6 +379,12 @@ function Notes() {
                     <p className="text-xs text-muted-foreground mt-4">
                       Related to: {note.place}
                     </p>
+
+                    {note.isShared && (
+                      <p className="text-xs text-muted-foreground mt-1 italic">
+                        Shared by: {note.sharedByName}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}

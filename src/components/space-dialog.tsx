@@ -70,7 +70,7 @@ export function SpaceDialog() {
         user.emailAddresses[0].emailAddress
       );
       toast.success("Joined space successfully!");
-      // setShowSpace(true); 
+      // setShowSpace(true);
       setOpen(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -112,6 +112,7 @@ export function SpaceDialog() {
                 {createdSpaceId && (
                   <div className="flex items-center gap-2">
                     <Input readOnly value={`${createdSpaceId}`} />
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -127,6 +128,35 @@ export function SpaceDialog() {
                       </TooltipTrigger>
                       <TooltipContent>Copy space link</TooltipContent>
                     </Tooltip>
+
+                    {typeof navigator.share !== "undefined" && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            size="icon"
+                            onClick={() => {
+                              navigator
+                                .share({
+                                  title: "Join my Space",
+                                  text: "Use this code to join my collaboration space:",
+                                  url: `${window.location.origin}/join?spaceId=${createdSpaceId}`,
+                                })
+                                .then(() => {
+                                  toast.success("Shared successfully!");
+                                })
+                                .catch((error) => {
+                                  console.error("Sharing failed:", error);
+                                  toast.error("Share canceled or failed.");
+                                });
+                            }}
+                          >
+                            <Link className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Share space link</TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 )}
               </div>
