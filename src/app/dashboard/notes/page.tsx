@@ -138,7 +138,7 @@ function Notes() {
   useEffect(() => {
     console.log("User info:", user); // helpful for debugging
     if (user) fetchNotes();
-  }, [user]);
+  }, [user, fetchNotes]);
 
   const handleAddOrEditNote = async () => {
     if (!newNoteTitle || !newNoteContent || !user) {
