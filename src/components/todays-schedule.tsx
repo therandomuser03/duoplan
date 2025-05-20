@@ -27,13 +27,13 @@ interface User {
   last_name: string;
 }
 
-// interface Space {
-//   id: string;
-//   user_a_id: string;
-//   user_b_id: string;
-//   user_a_email: string;
-//   user_b_email: string;
-// }
+interface Space {
+  id: string;
+  user_a_id: string;
+  user_b_id: string;
+  user_a_email: string;
+  user_b_email: string;
+}
 
 interface Note {
   id: string;
