@@ -13,13 +13,11 @@ DuoPlan is a collaborative planner designed for couples, helping them stay in sy
 
 ## Tech Stack
 
-- **Frontend**: Next.js (App Router), React
+- **Frontend**: Next.js (App Router)
 - **Styling**: Tailwind CSS, shadcn/ui
 - **Database**: Supabase
-- **Authentication**: Supabase Auth
+- **Authentication**: Supabase Auth & Clerk
 - **State Management**: React Hooks
-- **Animations**: Framer Motion
-- **Calendar**: React Big Calendar
 - **Icons**: Lucide React
 
 ## Getting Started
