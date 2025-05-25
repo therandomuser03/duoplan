@@ -29,7 +29,7 @@ export default function Hero() {
           </p>
           <div className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
             <Button size="lg" className="px-8">
-              Get Started
+              <Link href="#signup">Get Started</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="#features">Learn More</Link>
