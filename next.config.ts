@@ -1,9 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  images: {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+    images: {
     domains: ["avatar.vercel.sh"],
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

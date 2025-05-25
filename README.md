@@ -1,112 +1,126 @@
+
 # DuoPlan
 
-DuoPlan is a collaborative planner designed for couples, helping them stay in sync with shared calendars, notes, and real-time updates.
+**DuoPlan** is a minimalist, real-time shared planner designed for two people. Collaborate on schedules, notes, and plans — all in one intuitive interface.
 
-## Features
+---
 
-- **Shared Calendar**: Keep schedules in sync with real-time updates across devices
-- **Integrated Notes**: Attach notes to events or keep standalone shared notes
-- **Partner System**: Connect with your partner to share calendars and plans
-- **Real-time Updates**: See changes instantly when your partner modifies events
-- **Modern UI**: Clean, minimalist interface with dark mode support
-- **Multiple Views**: Day, week, and month calendar views
+## ✨ Features
 
-## Tech Stack
+- 🗓 **Shared Calendar** — Add and sync events with your partner
+- 📝 **Collaborative Notes** — Attach rich notes to events or create stand-alone entries
+- 👥 **Partner Spaces** — Securely connect with a partner for seamless collaboration
+- 🔄 **Real-Time Updates** — Instantly reflect changes across devices
+- 🌗 **Modern UI** — Clean, responsive design with dark mode
+- 🔐 **Authentication** — Powered entirely by [Supabase Auth](https://supabase.com/auth)
 
-- **Frontend**: Next.js (App Router)
-- **Styling**: Tailwind CSS, shadcn/ui
-- **Database**: Supabase
-- **Authentication**: Supabase Auth & Clerk
-- **State Management**: React Hooks
-- **Icons**: Lucide React
+---
 
-## Getting Started
+## 🧱 Tech Stack
 
-### Prerequisites
+| Layer         | Tech                      |
+|---------------|---------------------------|
+| Framework     | [Next.js](https://nextjs.org/) (App Router) |
+| Styling       | [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com) |
+| Backend & DB  | [Supabase](https://supabase.com/) (Postgres + RLS) |
+| Auth          | Supabase Auth             |
+| State         | React Hooks               |
+| Charts & UI   | Lucide, Framer Motion, Recharts |
 
-- Node.js 18.0 or later
-- npm or yarn
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+
+- Node.js v18 or higher
 - Supabase account
+- Git & your favorite package manager (npm or pnpm)
 
-### Installation
+### 2. Clone the Repo
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/duoplan.git
-   cd duoplan
-   ```
+```bash
+git clone https://github.com/yourusername/duoplan.git
+cd duoplan
+````
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+### 3. Install Dependencies
 
-3. Set up environment variables:
-   Create a `.env.local` file in the root directory with the following variables:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+```bash
+npm install
+# or
+pnpm install
+```
 
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### 4. Environment Variables
 
-### Database Setup
+Create a `.env.local` file in the root directory:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_public_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # only used server-side
+```
+
+### 5. Start the Dev Server
+
+```bash
+npm run dev
+```
+
+---
+
+## 🧪 Database Setup
 
 1. Create a new Supabase project
-2. Connect to your project using the "Connect to Supabase" button
-3. The database schema will be automatically created
+2. Copy and run the SQL from `database/schema.sql` in the Supabase SQL editor
+3. Enable **Row-Level Security (RLS)** on all tables
+4. Verify policies match your needs (already included in `schema.sql`)
 
-## Project Structure
+---
+
+## 🗂 Project Structure
 
 ```
 duoplan/
-├── app/                   # Next.js App Router pages
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # Dashboard and features
-│   └── page.tsx           # Landing page
-├── components/            # Reusable components
-├── hooks/                 # Custom React hooks
-├── lib/                   # Utility functions
-├── types/                 # TypeScript types
-└── public/                # Static assets
+├── app/                # App Router pages (Next.js)
+│   ├── dashboard/      # Main dashboard (auth required)
+│   ├── login/          # Supabase login page
+│   ├── api/            # Server-side endpoints
+│   └── layout.tsx      # Root layout with providers
+├── components/         # Reusable UI components
+├── lib/                # Supabase clients, utils
+├── hooks/              # Custom React hooks
+├── database/           # SQL schema & DB types
+├── styles/             # Global styles
+└── public/             # Static files (images, icons)
 ```
 
-## Features in Detail
+---
 
-### Authentication
-- Email/password authentication
-- Protected routes
-- User profile management
+## 🔐 Authentication
 
-### Calendar
-- Shared calendar events
-- Multiple view options
-- Real-time updates
-- Event details and notes
+This project uses **Supabase Auth** with `@supabase/auth-helpers-nextjs`.
 
-### Notes
-- Shared notes system
-- Rich text support
-- Real-time collaboration
-- Categorization
+To protect routes:
 
-### Partner System
-- Partner invitations
-- Shared access management
-- Real-time synchronization
+* Use `createServerComponentClient()` in server components
+* Use `useSession()` or `useUser()` on the client
 
-## License
+---
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📝 License
 
-## Acknowledgments
+This project is licensed under the **MIT License**. See the `LICENSE` file for details.
 
-- [Next.js](https://nextjs.org/)
-- [Supabase](https://supabase.io/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [React Big Calendar](https://github.com/jquense/react-big-calendar)
+---
+
+## 📬 Acknowledgments
+
+* [Supabase](https://supabase.com/)
+* [Next.js](https://nextjs.org/)
+* [Tailwind CSS](https://tailwindcss.com/)
+* [shadcn/ui](https://ui.shadcn.com/)
+* [Lucide](https://lucide.dev/)
+
+```

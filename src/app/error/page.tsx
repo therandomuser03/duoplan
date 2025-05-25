@@ -3,8 +3,8 @@ import Link from "next/link";
 
 export default function Error() {
   return (
-    <main className="grid min-h-screen place-items-center px-6 py-24 sm:py-32 lg:px-8 bg-white dark:bg-neutral-950 transition-colors">
-      <div className="relative text-center items-center z-10">
+    <main className="grid place-items-center px-6 py-24 sm:py-32 lg:px-8 bg-white dark:bg-neutral-950 transition-colors">
+      <div className="relative text-center items-center pt-16 z-10">
         {/* Position the globe in the background with a lower z-index */}
         <Globe className="absolute inset-0 z-[-1] filter dark:invert" />
 
