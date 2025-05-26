@@ -1,6 +1,6 @@
 import { CalendarDaysIcon } from "lucide-react"
 
-import { LoginForm } from "@/components/login-form"
+import { LoginForm } from "@/components/auth/login-form"
 import { FlickeringGrid } from "@/components/magicui/flickering-grid"
 
 export default function LoginPage() {

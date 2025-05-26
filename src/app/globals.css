@@ -6,6 +6,7 @@
   .theme {
     --animate-marquee: marquee var(--duration) infinite linear;
     --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+    --animate-shine: shine var(--duration) infinite linear;
   }
   :root {
     --background: 0 0% 100%;
@@ -134,6 +135,17 @@
     }
   to {
     transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes shine {
+  0% {
+    background-position: 0% 0%;
+    }
+  50% {
+    background-position: 100% 100%;
+    }
+  to {
+    background-position: 0% 0%;
     }
   }
 }

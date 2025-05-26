@@ -13,7 +13,7 @@ export default function Error() {
           Page not found
         </h1>
         <p className="mt-6 text-lg font-medium text-pretty text-gray-600 dark:text-gray-400 sm:text-xl/8">
-          Sorry, we couldn&apos;t find the page you&apos;re looking for.
+          Sorry, something went wrong. We couldn&apos;t find what you&apos;re looking for.
         </p>
         <div className="mt-10 flex items-center justify-center">
           <Link

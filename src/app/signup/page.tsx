@@ -1,6 +1,6 @@
 import { CalendarDaysIcon } from "lucide-react"
 
-import { SignupForm } from "@/components/signup-form"
+import { SignupForm } from "@/components/auth/signup-form"
 import { FlickeringGrid } from "@/components/magicui/flickering-grid"
 
 export default function SignupPage() {

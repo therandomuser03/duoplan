@@ -12,7 +12,7 @@ export default function Header() {
       </Link>
       <div className="flex items-center gap-2">
         <Button asChild variant="outline" className="hidden sm:flex">
-          <Link href="/login">
+          <Link href="login">
             Log In
           </Link>
         </Button>
