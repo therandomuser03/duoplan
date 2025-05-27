@@ -1,21 +1,32 @@
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
+import WeeklyCalendar from "@/components/dashboard/WeeklyCalendar";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function Page() {
+export default function Dashboard() {
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -26,29 +37,93 @@ export default function Page() {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
+                <BreadcrumbItem className="md:block">
+                  <BreadcrumbLink href="dashboard">
+                    <BreadcrumbPage>Dashboard</BreadcrumbPage>
                   </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            {/*<div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" /> */}
+          <div className="flex flex-row gap-4 min-h-[100vh]">
+            {/* Weekly Calendar (3 parts) */}
+            <WeeklyCalendar />
 
-            <Card>
-              <div className="aspect-video rounded-xl bg-muted/50">1234</div>
-            </Card>
+            {/* Today's Notes (1 part) */}
+            {/* <div className="flex-[1] bg-background rounded-xl p-6 shadow-md">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold">Today's Schedule</h2>
+                <button className="text-sm text-muted-foreground underline">
+                  View All
+                </button>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+
+              <div className="flex gap-2 mb-4 bg-muted p-1 rounded-md">
+                <button className="flex-1 py-1 rounded bg-primary text-primary-foreground text-sm font-semibold">
+                  My Notes
+                </button>
+                <button className="flex-1 py-1 rounded text-sm">
+                  Notes by Anubhab
+                </button>
+              </div>
+
+              <div className="border border-muted rounded-lg p-4">
+                <p className="text-muted-foreground">My Schedule for Today</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No notes scheduled for today
+                </p>
+              </div>
+            </div> */}
+
+            <Tabs defaultValue="myNotes" className="w-[400px]">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="myNotes">My Notes</TabsTrigger>
+                <TabsTrigger value="notesByPartner">Notes by {'partner'}</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="myNotes">
+          <Card>
+            <CardHeader>
+              <CardTitle>My Schedule for Today</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Here's what's planned
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                No notes scheduled for today
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notesByPartner">
+          <Card>
+            <CardHeader>
+              <CardTitle>Partner's Notes</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Notes shared with you
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                No shared notes for today
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+            </Tabs>
           </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
         </div>
       </SidebarInset>
     </SidebarProvider>

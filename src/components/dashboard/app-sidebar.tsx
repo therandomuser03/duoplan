@@ -2,10 +2,7 @@
 
 import * as React from "react";
 import {
-  Frame,
   LifeBuoy,
-  Map,
-  PieChart,
   Send,
   CalendarDays,
   BookText,
@@ -33,7 +30,7 @@ import { Calendar } from "../ui/calendar";
 const data = {
   user: {
     name: "shadcn",
-    email: "m@example.com",
+    email: "email@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
@@ -53,30 +50,24 @@ const data = {
   navMain: [
     {
       title: "Notes",
-      url: "#",
+      url: "/dashboard/notes",
       icon: BookText,
     },
     {
       title: "Shared Notes",
-      url: "#",
+      url: "/dashboard/shared-notes",
       icon: Link,
     },
   ],
   navSecondary: [
-    { title: "Support", url: "#", icon: LifeBuoy },
-    { title: "Feedback", url: "#", icon: Send },
-  ],
-  projects: [
-    { name: "Design Engineering", url: "#", icon: Frame },
-    { name: "Sales & Marketing", url: "#", icon: PieChart },
-    { name: "Travel", url: "#", icon: Map },
+    { title: "Support", url: "/support", icon: LifeBuoy },
+    { title: "Feedback", url: "/feedback", icon: Send },
   ],
 };
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
-
+  // const { state } = useSidebar();
+  // const isCollapsed = state === "collapsed";
   const ConstantLogo = CalendarDays;
   const teamsWithConstantLogo = data.teams.map((team) => ({
     ...team,
@@ -84,40 +75,18 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   }));
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={teamsWithConstantLogo} />
       </SidebarHeader>
-
       <SidebarContent>
-        {isCollapsed ? (
-          <div className="flex justify-center p-2">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  size="lg"
-                  tooltip="Calendar"
-                  className="flex items-center justify-center"
-                >
-                  <CalendarDays className="size-4" />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </div>
-        ) : (
-          <div className="p-2">
             <Calendar />
-          </div>
-        )}
-
         <NavMain items={data.navMain} />
       </SidebarContent>
-
       <SidebarFooter>
         <NavSecondary items={data.navSecondary} />
         <NavUser user={data.user} />
       </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   );
