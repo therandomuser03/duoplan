@@ -4,7 +4,7 @@ export default function TermsPage() {
       <h1>Terms of Service</h1>
       <p>Effective Date: May 26, 2025</p>
 
-      <p>Welcome to DuoPlan. By accessing or using our web application ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the Service.</p>
+      <p>Welcome to DuoPlan. By accessing or using our web application (&quotService&quot), you agree to be bound by these Terms of Service (&quotTerms&quot). If you do not agree to these Terms, please do not use the Service.</p>
 
       <h2>1. Description of Service</h2>
       <p>DuoPlan is a minimalist, real-time shared planner designed for two people. Users can collaborate through shared calendars, notes, and plans via a secure and responsive interface.</p>

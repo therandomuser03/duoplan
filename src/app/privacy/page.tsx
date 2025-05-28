@@ -4,7 +4,7 @@ export default function PrivacyPage() {
       <h1>Privacy Policy</h1>
       <p>Effective Date: May 26, 2025</p>
 
-      <p>This Privacy Policy explains how DuoPlan ("we", "our", "us") collects, uses, and protects your personal information.</p>
+      <p>This Privacy Policy explains how DuoPlan (&quotwe&quot, &quotour&quot, &quotus&quot) collects, uses, and protects your personal information.</p>
 
       <h2>1. Information We Collect</h2>
       <ul>

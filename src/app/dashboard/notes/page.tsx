@@ -33,7 +33,16 @@ export default function Notes() {
   });
   const [shareWithPartner, setShareWithPartner] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [notes, setNotes] = useState<any[]>([]);
+  interface Note {
+    id: string;
+    title: string;
+    content: string;
+    start_time?: string;
+    end_time?: string;
+    color?: string;
+  }
+
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -96,7 +105,25 @@ export default function Notes() {
   };
 
   useEffect(() => {
-    fetchNotes();
+    // Define fetchNotes inside useEffect to avoid dependency warning
+    const fetchNotesEffect = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/notes?date=${selectedDate}`);
+        if (res.ok) {
+          const data = await res.json();
+          setNotes(data);
+        } else {
+          setNotes([]);
+        }
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+        setNotes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotesEffect();
   }, [selectedDate]);
 
   return (

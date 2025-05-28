@@ -26,6 +26,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 export function NavUser({
   user,
@@ -78,26 +79,36 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
+              <Link href="/account">
+                <DropdownMenuItem>
+                  <BadgeCheck />
+                  Account
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/notifications">
               <DropdownMenuItem>
                 <Bell />
                 Notifications
               </DropdownMenuItem>
+              </Link>
+              <Link href="/billing">
               <DropdownMenuItem>
                 <CreditCard />
                 Billing
               </DropdownMenuItem>
+              </Link>
+              <Link href="/feedback">
               <DropdownMenuItem>
                 <Sparkles />
                 Feedback
               </DropdownMenuItem>
+              </Link>
+              <Link href="/support">
               <DropdownMenuItem>
                 <LifeBuoy />
                 Support
               </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>

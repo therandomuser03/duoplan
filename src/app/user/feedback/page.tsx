@@ -53,7 +53,7 @@ export default function Feedback() {
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-2">We value your feedback</h1>
             <p className="text-muted-foreground">
-              Let us know how we're doing and how we can improve your
+              Let us know how we&apos;re doing and how we can improve your
               experience.
             </p>
           </div>

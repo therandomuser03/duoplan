@@ -22,10 +22,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
 export default function SharedNotes() {
-  const [incomingNotes, setIncomingNotes] = useState([]);
-  const [outgoingNotes, setOutgoingNotes] = useState([]);
+const [incomingNotes, setIncomingNotes] = useState<SharedNote[]>([]);
+const [outgoingNotes, setOutgoingNotes] = useState<SharedNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [time, setTime] = useState(new Date());
+
+  interface SharedNote {
+  id: string;
+  title: string;
+  content: string;
+  color?: string;
+  from_user_name?: string;
+  to_user_name?: string;
+}
+
 
   const fetchNotes = async () => {
     setLoading(true);
@@ -99,7 +109,7 @@ export default function SharedNotes() {
           No notes shared with you yet.
         </p>
       ) : (
-        incomingNotes.map((note: any) => (
+        incomingNotes.map((note) => (
           <Card
             key={note.id}
             className="p-4 mb-4 border-l-4 shadow-sm hover:shadow-md transition-all duration-200"
@@ -128,10 +138,10 @@ export default function SharedNotes() {
         <Skeleton className="h-24 w-full rounded-xl" />
       ) : outgoingNotes.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          You haven't shared any notes yet.
+          You haven&apos;t shared any notes yet.
         </p>
       ) : (
-        outgoingNotes.map((note: any) => (
+        outgoingNotes.map((note) => (
           <Card
             key={note.id}
             className="p-4 mb-4 border-l-4 shadow-sm hover:shadow-md transition-all duration-200"

@@ -17,11 +17,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar";
 
 import { NavSecondary } from "./nav-secondary";
@@ -50,12 +46,12 @@ const data = {
   navMain: [
     {
       title: "Notes",
-      url: "/dashboard/notes",
+      url: "/notes",
       icon: BookText,
     },
     {
       title: "Shared Notes",
-      url: "/dashboard/shared-notes",
+      url: "/shared-notes",
       icon: Link,
     },
   ],

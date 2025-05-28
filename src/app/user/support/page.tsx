@@ -9,7 +9,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -20,8 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Book, Calendar, FileText, Plus, Search, Settings, Users } from "lucide-react";
-import { ModeToggle } from "@/components/mode-toggle";
+import { Book, Calendar, FileText, Search, Settings, Users } from "lucide-react";
 
 // Quick links data
 const quickLinks = [

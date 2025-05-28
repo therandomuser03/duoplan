@@ -7,17 +7,13 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -96,7 +92,7 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>My Schedule for Today</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Here's what's planned
+                Here&apos;s what&apos;s planned
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -110,7 +106,7 @@ export default function Dashboard() {
         <TabsContent value="notesByPartner">
           <Card>
             <CardHeader>
-              <CardTitle>Partner's Notes</CardTitle>
+              <CardTitle>Partner&apos;s Notes</CardTitle>
               <CardDescription className="text-muted-foreground">
                 Notes shared with you
               </CardDescription>

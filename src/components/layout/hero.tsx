@@ -25,7 +25,7 @@ export default function Hero() {
           <p className="mb-10 pt-4 mr-4 text-xl text-muted-foreground">
             DuoPlan is a thoughtfully designed shared planning tool built specifically for couples, partners, and close collaborators who need to stay in sync without the clutter and complexity of traditional calendar apps.
             <br /><br />
-            Whether you're managing appointments, planning a trip, coordinating weekly routines, or simply remembering to buy groceries — DuoPlan brings it all together in a minimalist, beautiful interface that works for two.
+            Whether you&apos;re managing appointments, planning a trip, coordinating weekly routines, or simply remembering to buy groceries — DuoPlan brings it all together in a minimalist, beautiful interface that works for two.
           </p>
           <div className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
             <Button size="lg" className="px-8">

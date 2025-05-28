@@ -4,6 +4,31 @@ const nextConfig: NextConfig = {
     images: {
     domains: ["avatar.vercel.sh"],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/notes', destination: '/dashboard/notes',
+      },
+      {
+        source: '/shared-notes', destination: '/dashboard/shared-notes',
+      },
+      {
+        source: '/account', destination: '/user/account',
+      },
+      {
+        source: '/notifications', destination: '/user/notifications',
+      },
+      {
+        source: '/billing', destination: '/user/billing',
+      },
+      {
+        source: '/feedback', destination: '/user/feedback',
+      },
+      {
+        source: '/support', destination: '/user/support',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

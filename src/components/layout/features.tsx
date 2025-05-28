@@ -39,7 +39,13 @@ const features = [
   },
 ];
 
-function FeatureCard({ icon, title, description }: any) {
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
     <div className="flex flex-col items-center rounded-lg border bg-background p-6 text-center shadow-sm hover:shadow-md">
       <div className="mb-4">{icon}</div>
@@ -48,6 +54,7 @@ function FeatureCard({ icon, title, description }: any) {
     </div>
   );
 }
+
 
 export default function Features() {
   return (

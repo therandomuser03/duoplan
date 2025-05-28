@@ -115,7 +115,8 @@ export function DotPattern({
         "pointer-events-none absolute inset-0 h-full w-full",
         className,
       )}
-      {...props}
+      {...props} 
+      style={{ transform: `translate(${x}px, ${y}px)` }}
     >
       <defs>
         <radialGradient id={`${id}-gradient`}>
@@ -123,7 +124,7 @@ export function DotPattern({
           <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
         </radialGradient>
       </defs>
-      {dots.map((dot, index) => (
+      {dots.map((dot) => (
         <motion.circle
           key={`${dot.x}-${dot.y}`}
           cx={dot.x}
