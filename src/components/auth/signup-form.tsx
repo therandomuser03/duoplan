@@ -1,4 +1,4 @@
-import { signup } from './actions'
+
 
 
 import { cn } from "@/lib/utils"
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { signInWithGoogle } from "@/utils/actions"
 
 export function SignupForm({
   className,
@@ -79,13 +80,13 @@ export function SignupForm({
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input id="confirmPassword" type="password" required />
                 </div>
-                <Button formAction={signup} type="submit" className="w-full">
+                <Button formAction={signInWithGoogle} type="submit" className="w-full">
                   Sign Up
                 </Button>
               </div>
               <div className="text-center text-sm">
                 Already have an account?{" "}
-                <a href="login" className="underline underline-offset-4">
+                <a href="#" className="underline underline-offset-4">
                   Log in
                 </a>
               </div>

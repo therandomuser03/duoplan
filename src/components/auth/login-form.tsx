@@ -1,4 +1,4 @@
-import { login } from './actions'
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signInWithGoogle } from "@/utils/actions";
 
 export function LoginForm({
   className,
@@ -80,13 +81,13 @@ export function LoginForm({
                   </div>
                   <Input id="password" name="password" type="password" required />
                 </div>
-                <Button formAction={login} type="submit" className="w-full">
+                <Button formAction={signInWithGoogle} type="submit" className="w-full">
                   Login
                 </Button>
               </div>
               <div className="text-center text-sm">
                 Don&apos;t have an account?{" "}
-                <a href="signup" className="underline underline-offset-4">
+                <a href="#" className="underline underline-offset-4">
                   Sign up
                 </a>
               </div>

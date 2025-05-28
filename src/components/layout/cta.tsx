@@ -13,7 +13,7 @@ export default function CTA() {
           their shared scheduling.
         </p>
         <Button asChild size="lg" className="px-8">
-          <Link href="/">Try DuoPlan Now</Link>
+          <Link href="auth">Try DuoPlan Now</Link>
         </Button>
       </div>
     </section>
