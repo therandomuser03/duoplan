@@ -56,7 +56,7 @@ const signInWith = (provider: "google" | "github") => async () => {
   const supabase = await createClient();
 
   // Use full URL for callback
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://duoplan.vercel.app/'
   const auth_callback_url = `${baseUrl}/auth/callback`;
 
   console.log('Attempting OAuth with:', provider)
