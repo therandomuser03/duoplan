@@ -27,6 +27,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { logout } from "@/utils/actions";
 
 export function NavUser({
   user,
@@ -39,6 +40,25 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
 
+  // Create initials from name
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -49,8 +69,13 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarImage
+                  src={user.avatar || "/default-avatar.png"}
+                  alt={user.name || "User"}
+                />
+                <AvatarFallback className="rounded-lg">
+                  {getInitials(user.name || "User")}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name}</span>
@@ -69,7 +94,9 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user.name}</span>
@@ -86,32 +113,32 @@ export function NavUser({
                 </DropdownMenuItem>
               </Link>
               <Link href="/notifications">
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Bell />
+                  Notifications
+                </DropdownMenuItem>
               </Link>
               <Link href="/billing">
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <CreditCard />
+                  Billing
+                </DropdownMenuItem>
               </Link>
               <Link href="/feedback">
-              <DropdownMenuItem>
-                <Sparkles />
-                Feedback
-              </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Sparkles />
+                  Feedback
+                </DropdownMenuItem>
               </Link>
               <Link href="/support">
-              <DropdownMenuItem>
-                <LifeBuoy />
-                Support
-              </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <LifeBuoy />
+                  Support
+                </DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

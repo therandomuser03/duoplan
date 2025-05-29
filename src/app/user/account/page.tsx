@@ -1,5 +1,3 @@
-"use client";
-
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import {
   Breadcrumb,
@@ -13,13 +11,19 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { getCurrentUser } from "@/utils/user";
+import { redirect } from "next/navigation";
 
-export default function Account() {
+export default async function Account() {
+  const user = await getCurrentUser();
 
+  if (!user) {
+    redirect("/auth");
+  }
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">

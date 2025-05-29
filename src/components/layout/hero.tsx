@@ -37,7 +37,7 @@ export default function Hero() {
           </div>
         </div>
         <div className="w-full max-w-2xl overflow-hidden rounded-xl border bg-background shadow-xl">
-          <Image src="/screenshot.png" alt="App preview" width={1920} height={1080} />
+          <Image src="/dashboard.png" alt="App preview" width={1920} height={1080} />
         </div>
       </div>
     </section>

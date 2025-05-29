@@ -23,12 +23,8 @@ import {
 import { NavSecondary } from "./nav-secondary";
 import { Calendar } from "../ui/calendar";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "email@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+// Static data that doesn't depend on user
+const staticData = {
   teams: [
     {
       name: "Acme Inc",
@@ -61,11 +57,17 @@ const data = {
   ],
 };
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  // const { state } = useSidebar();
-  // const isCollapsed = state === "collapsed";
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user: {
+    name: string;
+    email: string;
+    avatar: string;
+  };
+}
+
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const ConstantLogo = CalendarDays;
-  const teamsWithConstantLogo = data.teams.map((team) => ({
+  const teamsWithConstantLogo = staticData.teams.map((team) => ({
     ...team,
     logo: ConstantLogo,
   }));
@@ -76,12 +78,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={teamsWithConstantLogo} />
       </SidebarHeader>
       <SidebarContent>
-            <Calendar />
-        <NavMain items={data.navMain} />
+        <Calendar />
+        <NavMain items={staticData.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavSecondary items={data.navSecondary} />
-        <NavUser user={data.user} />
+        <NavSecondary items={staticData.navSecondary} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

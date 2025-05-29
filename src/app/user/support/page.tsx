@@ -1,5 +1,3 @@
-"use client";
-
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import {
   Breadcrumb,
@@ -20,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Book, Calendar, FileText, Search, Settings, Users } from "lucide-react";
+import { getCurrentUser } from "@/utils/user";
+import { redirect } from "next/navigation";
 
 // Quick links data
 const quickLinks = [
@@ -136,10 +136,15 @@ const accountFAQs = [
   }
 ];
 
-export default function Support() {
+export default async function Support() {
+    const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
@@ -148,7 +153,7 @@ export default function Support() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                  <BreadcrumbLink href="dashboard">Dashboard</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
