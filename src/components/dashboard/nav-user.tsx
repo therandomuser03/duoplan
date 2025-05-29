@@ -70,7 +70,7 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
-                  src={user.avatar || "/default-avatar.png"}
+                  src={user.avatar}
                   alt={user.name || "User"}
                 />
                 <AvatarFallback className="rounded-lg">

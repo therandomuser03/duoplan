@@ -110,7 +110,7 @@ export default function NotesClient({ user }: { user: User }) {
 
   useEffect(() => {
     fetchNotes();
-  }, [selectedDate]);
+  }, [fetchNotes]);
 
   return (
     <SidebarProvider>
