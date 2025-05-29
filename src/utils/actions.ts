@@ -17,7 +17,7 @@ export async function login(formData: FormData) {
 
   if (error) {
     console.error('Login error:', error)
-    redirect('/error')
+    redirect(`/error?message=${encodeURIComponent(error.message)}`)
   }
 
   revalidatePath('/', 'layout')
@@ -28,23 +28,34 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
-  const email = formData.get('email') as string
+  const email = (formData.get('email') as string)?.toLowerCase();
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
+  
+  if (!email) return redirect('/error?message=Missing email');
 
   // Validate password confirmation
   if (password !== confirmPassword) {
     redirect('/error?message=Passwords do not match')
   }
 
+  if (!password || !confirmPassword) {
+  redirect('/error?message=Missing password fields');
+}
+
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const { error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+    emailRedirectTo: `${baseUrl}/auth/callback`,
+  }
   })
 
   if (error) {
     console.error('Signup error:', error)
-    redirect('/error')
+    redirect(`/error?message=${encodeURIComponent(error.message)}`)
   }
 
   revalidatePath('/', 'layout')
@@ -56,7 +67,7 @@ const signInWith = (provider: "google" | "github") => async () => {
   const supabase = await createClient();
 
   // Use full URL for callback
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const auth_callback_url = `${baseUrl}/auth/callback`;
 
   console.log('Attempting OAuth with:', provider)
@@ -92,7 +103,6 @@ export const signInWithGithub = signInWith("github");
 // Logout function
 export async function logout() {
   const supabase = await createClient();
-  
   const { error } = await supabase.auth.signOut();
 
   if (error) {
@@ -144,14 +154,14 @@ export async function createUserProfile(user: SupabaseUser) {
     // Create new user profile
     const { error: insertError } = await supabase
       .from('users')
-      .insert({
+      .upsert([{
         id: user.id,
         email: user.email,
         username: user.user_metadata?.preferred_username || user.user_metadata?.user_name || user.email?.split('@')[0],
         first_name: user.user_metadata?.given_name || user.user_metadata?.first_name || '',
         last_name: user.user_metadata?.family_name || user.user_metadata?.last_name || '',
         created_at: new Date().toISOString()
-      });
+      }], { onConflict: 'id' });
 
     if (insertError) {
       console.error('Error creating user profile:', insertError);
