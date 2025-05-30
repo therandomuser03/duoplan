@@ -80,8 +80,9 @@ export function CreateSpaceDialog({
         throw new Error(data?.error || "Failed to create space");
 
       setCreatedSpaceId(data.space.id);
+      console.log("🆔 Created spaceId:", data.space.id); 
       toast.success("Space created successfully!");
-      onSpaceCreated?.(data.space.id);
+      // onSpaceCreated?.(data.space.id);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Error creating space:", error);
@@ -118,10 +119,10 @@ export function CreateSpaceDialog({
       const data = await response.json();
 
       if (!response.ok) throw new Error(data?.error || "Failed to join space");
-
+      console.log("✅ Joined space:", data.space.id);
       toast.success("Successfully joined the space!");
       onSpaceCreated?.(data.space.id);
-      handleClose();
+      // handleClose();
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Error joining space:", error);
