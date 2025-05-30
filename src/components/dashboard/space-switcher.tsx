@@ -1,8 +1,9 @@
 // src/components/dashboard/space-switcher.tsx
+
 "use client";
 
-import * as React from "react";
-import { ChevronsUpDown, Plus, Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { ChevronsUpDown, Plus, Users, Clock } from "lucide-react";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -45,13 +46,27 @@ export function SpaceSwitcher({
 }: {
   spaces: Space[];
   currentUserId: string;
-  onCreateSpace?: () => void;
-  onSpaceCreated?: (spaceId: string) => void; // Add this type
+  onSpaceCreated?: (spaceId: string) => void;
 }) {
   const { isMobile } = useSidebar();
-  const [activeSpace, setActiveSpace] = React.useState<Space | null>(
-    spaces.length > 0 ? spaces[0] : null
-  );
+  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
+
+  // Effect to set the initial active space ID or update it if the current active space is stale
+  useEffect(() => {
+    // If no activeSpaceId is set, or if the current activeSpaceId doesn't exist in the new spaces prop,
+    // default to the first space if available.
+    if (!activeSpaceId && spaces.length > 0) {
+      setActiveSpaceId(spaces[0].id);
+    } else if (activeSpaceId && !spaces.find(space => space.id === activeSpaceId)) {
+      // If the previously active space is no longer in the list (e.g., deleted, though not implemented here),
+      // or if the current active space is not found in the updated spaces list,
+      // reset to the first space or null.
+      setActiveSpaceId(spaces.length > 0 ? spaces[0].id : null);
+    }
+  }, [spaces, activeSpaceId]);
+
+  // Derive activeSpace from activeSpaceId and the `spaces` prop
+  const activeSpace = activeSpaceId ? spaces.find(space => space.id === activeSpaceId) : null;
 
   // Helper function to get the other user in a space
   const getOtherUser = (space: Space): User | null => {
@@ -63,18 +78,42 @@ export function SpaceSwitcher({
     return null;
   };
 
-  // Helper function to get display name
-  const getDisplayName = (user: User): string => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name} ${user.last_name}`;
-    }
-    return user.username || user.email;
+  // Helper function to check if space is complete (has both users)
+  const isSpaceComplete = (space: Space): boolean => {
+    const complete = !!(space.user_a_id && space.user_b_id);
+    console.log("🔍 Space complete check:", {
+      spaceId: space.id,
+      user_a_id: space.user_a_id,
+      user_b_id: space.user_b_id,
+      complete,
+      user_a: space.user_a,
+      user_b: space.user_b
+    });
+    return complete;
   };
+
+  // Helper function to get display name
+const getDisplayName = (user: User): string => {
+  if (user.first_name && user.last_name) {
+    return `${user.first_name} ${user.last_name}`;
+  }
+  // If full name isn't available, check for first_name
+  if (user.first_name) {
+    return user.first_name;
+  }
+  // If first_name isn't available, check for last_name
+  if (user.last_name) {
+    return user.last_name;
+  }
+  // Fallback to username, then email if no name parts are available
+  return user.username || user.email;
+};
 
   // Handle space creation
   const handleSpaceCreated = (spaceId: string) => {
     onSpaceCreated?.(spaceId);
-    // You might want to refresh the spaces list here
+    // Optionally set the newly created space as active
+    setActiveSpaceId(spaceId);
   };
 
   // If no spaces, show create space option
@@ -98,9 +137,7 @@ export function SpaceSwitcher({
                     No Space Joined Yet
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {spaces.length === 0
-                      ? "Create a Space"
-                      : "Space Created. Wait for another user"}
+                    Create a Space
                   </span>
                 </div>
               </SidebarMenuButton>
@@ -111,13 +148,13 @@ export function SpaceSwitcher({
     );
   }
 
-  // If we have spaces but no active space, set the first one
-  if (!activeSpace && spaces.length > 0) {
-    setActiveSpace(spaces[0]);
-    return null;
+  // If activeSpace is not yet set, don't render anything
+  if (!activeSpace) {
+    return null; // Or a loading spinner, or default message
   }
 
-  const otherUser = activeSpace ? getOtherUser(activeSpace) : null;
+  const otherUser = getOtherUser(activeSpace);
+  const spaceComplete = isSpaceComplete(activeSpace);
 
   return (
     <SidebarMenu>
@@ -129,7 +166,7 @@ export function SpaceSwitcher({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-neutral-950 text-sidebar-primary-foreground overflow-hidden">
-                {otherUser?.avatar_url ? (
+                {spaceComplete && otherUser?.avatar_url ? (
                   <Image
                     src={otherUser.avatar_url}
                     alt={getDisplayName(otherUser)}
@@ -137,18 +174,20 @@ export function SpaceSwitcher({
                     height={32}
                     className="rounded-lg object-cover"
                   />
-                ) : (
+                ) : spaceComplete ? (
                   <Users className="size-4" />
+                ) : (
+                  <Clock className="size-4" />
                 )}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {otherUser
+                  {spaceComplete && otherUser
                     ? `Space with ${getDisplayName(otherUser)}`
-                    : "Loading..."}
+                    : "Waiting for partner to join"}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  Shared workspace
+                  {spaceComplete && otherUser ? otherUser.email : "Invite someone to join this space"}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -164,20 +203,20 @@ export function SpaceSwitcher({
               Spaces
             </DropdownMenuLabel>
 
-            {/* Show other spaces if there are multiple */}
-            {spaces.length > 1 ? (
+            {/* Show all spaces */}
+            {spaces.length > 0 ? ( // Changed from > 1 to > 0 to always show the current space in the dropdown if it's the only one
               spaces.map((space) => {
                 const spaceOtherUser = getOtherUser(space);
-                if (!spaceOtherUser) return null;
+                const isComplete = isSpaceComplete(space);
 
                 return (
                   <DropdownMenuItem
                     key={space.id}
-                    onClick={() => setActiveSpace(space)}
+                    onClick={() => setActiveSpaceId(space.id)} // Set activeSpaceId
                     className="gap-2 p-2"
                   >
                     <div className="flex size-6 items-center justify-center rounded-sm border overflow-hidden">
-                      {spaceOtherUser.avatar_url ? (
+                      {isComplete && spaceOtherUser?.avatar_url ? (
                         <Image
                           src={spaceOtherUser.avatar_url}
                           alt={getDisplayName(spaceOtherUser)}
@@ -185,13 +224,24 @@ export function SpaceSwitcher({
                           height={24}
                           className="object-cover"
                         />
-                      ) : (
+                      ) : isComplete ? (
                         <Users className="size-4 shrink-0" />
+                      ) : (
+                        <Clock className="size-4 shrink-0 text-muted-foreground" />
                       )}
                     </div>
-                    <span className="truncate">
-                      {getDisplayName(spaceOtherUser)}
-                    </span>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="truncate text-sm">
+                        {isComplete && spaceOtherUser
+                          ? `Space with ${getDisplayName(spaceOtherUser)}`
+                          : "Waiting for partner"}
+                      </span>
+                      {isComplete && spaceOtherUser && (
+                        <span className="truncate text-xs text-muted-foreground">
+                          {spaceOtherUser.email}
+                        </span>
+                      )}
+                    </div>
                   </DropdownMenuItem>
                 );
               })
