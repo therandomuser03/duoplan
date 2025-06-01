@@ -50,8 +50,8 @@ export default function NotesClient({ user }: { user: User }) {
     color: "",
   });
   const [shareWithPartner, setShareWithPartner] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(() =>
-    new Date().toISOString().split("T")[0]
+  const [selectedDate, setSelectedDate] = useState(
+    () => new Date().toISOString().split("T")[0]
   );
 
   interface Note {
@@ -85,7 +85,9 @@ export default function NotesClient({ user }: { user: User }) {
     { name: "Orange", value: "#f97316" },
   ];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -95,7 +97,10 @@ export default function NotesClient({ user }: { user: User }) {
 
   useEffect(() => {
     const fetchSpaceAndPartner = async () => {
-      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+        error: authError,
+      } = await supabase.auth.getUser();
       if (authError || !currentUser) {
         console.error("Auth error fetching user:", authError);
         // toast.error("Authentication error. Please try again."); // Optional: notify user
@@ -104,8 +109,8 @@ export default function NotesClient({ user }: { user: User }) {
       setCurrentUserId(currentUser.id);
 
       const { data: spaces, error: spacesError } = await supabase
-        .from('spaces')
-        .select('*')
+        .from("spaces")
+        .select("*")
         .or(`user_a_id.eq.${currentUser.id},user_b_id.eq.${currentUser.id}`);
 
       if (spacesError) {
@@ -117,9 +122,10 @@ export default function NotesClient({ user }: { user: User }) {
       if (spaces && spaces.length > 0) {
         const activeSpace = spaces[0];
         setActiveSpaceId(activeSpace.id);
-        const partnerId = activeSpace.user_a_id === currentUser.id
-          ? activeSpace.user_b_id
-          : activeSpace.user_a_id;
+        const partnerId =
+          activeSpace.user_a_id === currentUser.id
+            ? activeSpace.user_b_id
+            : activeSpace.user_a_id;
         setPartnerId(partnerId);
       } else {
         setActiveSpaceId(null);
@@ -134,9 +140,19 @@ export default function NotesClient({ user }: { user: User }) {
     e.preventDefault();
     const toastId = toast.loading("Creating note...");
 
+    // Convert local datetime-local strings to ISO 8601 UTC strings
+    const startTimeUTC = formData.start_time
+      ? new Date(formData.start_time).toISOString()
+      : null;
+    const endTimeUTC = formData.end_time
+      ? new Date(formData.end_time).toISOString()
+      : null;
+
     const notePayload = {
       ...formData,
-      shareWithPartner, // This is for sharing upon creation
+      start_time: startTimeUTC, // Send UTC string to API
+      end_time: endTimeUTC, // Send UTC string to API
+      shareWithPartner,
       activeSpaceId: shareWithPartner ? activeSpaceId : null,
       partnerId: shareWithPartner ? partnerId : null,
     };
@@ -161,12 +177,17 @@ export default function NotesClient({ user }: { user: User }) {
         fetchNotes();
       } else {
         const errorData = await res.json();
-        toast.error(`Failed to create note: ${errorData.message || res.statusText}`, { id: toastId });
+        toast.error(
+          `Failed to create note: ${errorData.message || res.statusText}`,
+          { id: toastId }
+        );
         console.error("Failed to create note:", errorData);
       }
     } catch (err) {
       console.error("Error submitting form:", err);
-      toast.error("Error submitting form. Check console for details.", { id: toastId });
+      toast.error("Error submitting form. Check console for details.", {
+        id: toastId,
+      });
     }
   };
 
@@ -187,30 +208,42 @@ export default function NotesClient({ user }: { user: User }) {
         fetchNotes();
       } else {
         const errorData = await res.json();
-        toast.error(`Failed to delete note: ${errorData.message || res.statusText}`, { id: toastId });
+        toast.error(
+          `Failed to delete note: ${errorData.message || res.statusText}`,
+          { id: toastId }
+        );
         console.error("Failed to delete note:", errorData);
       }
     } catch (err) {
       console.error("Error deleting note:", err);
-      toast.error("Error deleting note. Check console for details.", { id: toastId });
+      toast.error("Error deleting note. Check console for details.", {
+        id: toastId,
+      });
     }
   };
 
   const handleToggleShare = async (note: Note, checked: boolean) => {
     if (!activeSpaceId || !partnerId || !currentUserId) {
-      toast.error("Cannot share/unshare: Space or partner information is missing.");
+      toast.error(
+        "Cannot share/unshare: Space or partner information is missing."
+      );
       return;
     }
 
     let toastId: string | number | undefined;
 
-    if (checked) { // User wants to SHARE
-      if (!confirm(`Are you sure you want to share "${note.title}" with your partner?`)) {
+    if (checked) {
+      // User wants to SHARE
+      if (
+        !confirm(
+          `Are you sure you want to share "${note.title}" with your partner?`
+        )
+      ) {
         return;
       }
       toastId = toast.loading("Sharing note...");
       try {
-        const res = await fetch("/api/shared_notes", {
+        const res = await fetch("/api/shared-notes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -225,38 +258,59 @@ export default function NotesClient({ user }: { user: User }) {
           fetchNotes();
         } else {
           const errorData = await res.json();
-          toast.error(`Failed to share note: ${errorData.message || res.statusText}`, { id: toastId });
+          toast.error(
+            `Failed to share note: ${errorData.message || res.statusText}`,
+            { id: toastId }
+          );
           console.error("Failed to share note:", errorData);
           fetchNotes(); // Re-fetch to revert switch state if API failed
         }
       } catch (err) {
         console.error("Error sharing note:", err);
-        toast.error("Error sharing note. Check console for details.", { id: toastId });
+        toast.error("Error sharing note. Check console for details.", {
+          id: toastId,
+        });
         fetchNotes();
       }
-    } else { // User wants to UNSHARE
-      if (!confirm(`Are you sure you want to unshare "${note.title}"? This will remove the shared copy from your partner.`)) {
+    } else {
+      // User wants to UNSHARE
+      if (
+        !confirm(
+          `Are you sure you want to unshare "${note.title}"? This will remove the shared copy from your partner.`
+        )
+      ) {
         return;
       }
       toastId = toast.loading("Unsharing note...");
       try {
-        const res = await fetch(`/api/shared_notes?fromUserId=${currentUserId}&toUserId=${partnerId}&spaceId=${activeSpaceId}&title=${encodeURIComponent(note.title)}&content=${encodeURIComponent(note.content)}`, { // Ensure your DELETE endpoint can handle these params
+        const res = await fetch(
+          `/api/shared-notes?fromUserId=${currentUserId}&toUserId=${partnerId}&spaceId=${activeSpaceId}&title=${encodeURIComponent(
+            note.title
+          )}&content=${encodeURIComponent(note.content)}`,
+          {
+            // Ensure your DELETE endpoint can handle these params
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
-        });
+          }
+        );
 
         if (res.ok) {
           toast.success("Note unshared successfully!", { id: toastId });
           fetchNotes();
         } else {
           const errorData = await res.json();
-          toast.error(`Failed to unshare note: ${errorData.message || res.statusText}`, { id: toastId });
+          toast.error(
+            `Failed to unshare note: ${errorData.message || res.statusText}`,
+            { id: toastId }
+          );
           console.error("Failed to unshare note:", errorData);
           fetchNotes();
         }
       } catch (err) {
         console.error("Error unsharing note:", err);
-        toast.error("Error unsharing note. Check console for details.", { id: toastId });
+        toast.error("Error unsharing note. Check console for details.", {
+          id: toastId,
+        });
         fetchNotes();
       }
     }
@@ -270,8 +324,8 @@ export default function NotesClient({ user }: { user: User }) {
 
     // These are crucial for the backend to determine `is_shared` status correctly
     if (partnerId && activeSpaceId) {
-      queryParams.append('partnerId', partnerId);
-      queryParams.append('activeSpaceId', activeSpaceId);
+      queryParams.append("partnerId", partnerId);
+      queryParams.append("activeSpaceId", activeSpaceId);
     }
 
     try {
@@ -293,8 +347,9 @@ export default function NotesClient({ user }: { user: User }) {
   }, [selectedDate, partnerId, activeSpaceId]); // Dependencies are important
 
   useEffect(() => {
-    if (currentUserId) { // Fetch notes only after currentUserId is known
-        fetchNotes();
+    if (currentUserId) {
+      // Fetch notes only after currentUserId is known
+      fetchNotes();
     }
   }, [fetchNotes, currentUserId]); // Add currentUserId
 
@@ -327,35 +382,62 @@ export default function NotesClient({ user }: { user: User }) {
                 <h2 className="text-lg font-semibold">Create a Note</h2>
                 <div>
                   <Label htmlFor="title">Title</Label>
-                  <Input name="title" value={formData.title} onChange={handleChange} required />
+                  <Input
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="content">Content</Label>
-                  <Textarea name="content" value={formData.content} onChange={handleChange} required />
+                  <Textarea
+                    name="content"
+                    value={formData.content}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="start_time">Start Time</Label>
-                  <Input type="datetime-local" name="start_time" value={formData.start_time} onChange={handleChange} />
+                  <Input
+                    type="datetime-local"
+                    name="start_time"
+                    value={formData.start_time}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="end_time">End Time</Label>
-                  <Input type="datetime-local" name="end_time" value={formData.end_time} onChange={handleChange} />
+                  <Input
+                    type="datetime-local"
+                    name="end_time"
+                    value={formData.end_time}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="color">Color</Label>
-                  <Select name="color" value={formData.color} onValueChange={handleColorChange}>
+                  <Select
+                    name="color"
+                    value={formData.color}
+                    onValueChange={handleColorChange}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a color" />
                     </SelectTrigger>
                     <SelectContent>
                       {colorOptions.map((colorOption) => (
-                        <SelectItem key={colorOption.value} value={colorOption.value}>
+                        <SelectItem
+                          key={colorOption.value}
+                          value={colorOption.value}
+                        >
                           <div className="flex items-center gap-2">
                             {colorOption.value !== "none" && (
-                                <span
-                                    className="block size-4 rounded-full border border-gray-200"
-                                    style={{ backgroundColor: colorOption.value }}
-                                ></span>
+                              <span
+                                className="block size-4 rounded-full border border-gray-200"
+                                style={{ backgroundColor: colorOption.value }}
+                              ></span>
                             )}
                             {colorOption.name}
                           </div>
@@ -373,11 +455,15 @@ export default function NotesClient({ user }: { user: User }) {
                       onCheckedChange={setShareWithPartner}
                       disabled={!activeSpaceId || !partnerId}
                     />
-                    <Label htmlFor="share">Share with partner when creating</Label>
+                    <Label htmlFor="share">
+                      Share with partner when creating
+                    </Label>
                   </div>
                 )}
-                {(!partnerId && !loading) && (
-                    <p className="text-sm text-muted-foreground">No partner found in an active space to share with.</p>
+                {!partnerId && !loading && (
+                  <p className="text-sm text-muted-foreground">
+                    No partner found in an active space to share with.
+                  </p>
                 )}
                 <Button type="submit">Create Note</Button>
               </form>
@@ -398,7 +484,9 @@ export default function NotesClient({ user }: { user: User }) {
                   {loading ? (
                     <p>Loading notes...</p>
                   ) : notes.length === 0 ? (
-                    <p className="text-muted-foreground">No notes for this date. Create one!</p>
+                    <p className="text-muted-foreground">
+                      No notes for this date. Create one!
+                    </p>
                   ) : (
                     notes.map((note) => (
                       <Card
@@ -407,29 +495,57 @@ export default function NotesClient({ user }: { user: User }) {
                         style={{ borderColor: note.color || "#ccc" }}
                       >
                         <h3 className="font-semibold">{note.title}</h3>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{note.content}</p> {/* Added whitespace-pre-wrap */}
-    <p className="text-xs text-muted-foreground">
-      {note.start_time && note.end_time
-    ? `${new Date(note.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(note.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : note.start_time
-    ? `Starts: ${new Date(note.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : note.end_time
-    ? `Ends: ${new Date(note.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    : ''}
-    </p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {note.content}
+                        </p>{" "}
+                        {/* Added whitespace-pre-wrap */}
+                        <p className="text-xs text-muted-foreground">
+                          {note.start_time && note.end_time
+                            ? `${new Date(note.start_time).toLocaleTimeString(
+                                [],
+                                { hour: "2-digit", minute: "2-digit" }
+                              )} - ${new Date(note.end_time).toLocaleTimeString(
+                                [],
+                                { hour: "2-digit", minute: "2-digit" }
+                              )}`
+                            : note.start_time
+                            ? `Starts: ${new Date(
+                                note.start_time
+                              ).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}`
+                            : note.end_time
+                            ? `Ends: ${new Date(
+                                note.end_time
+                              ).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}`
+                            : ""}
+                        </p>
                         {note.user_id === currentUserId && (
                           <div className="flex items-center justify-end gap-2 mt-2">
                             {partnerId && activeSpaceId && (
                               <div className="flex items-center gap-2">
-                                <Label htmlFor={`share-note-${note.id}`} className="text-sm">
+                                <Label
+                                  htmlFor={`share-note-${note.id}`}
+                                  className="text-sm"
+                                >
                                   {note.is_shared ? "Shared" : "Share"}
                                 </Label>
                                 <Switch
                                   id={`share-note-${note.id}`}
                                   checked={!!note.is_shared}
-                                  onCheckedChange={(checked) => handleToggleShare(note, checked)}
+                                  onCheckedChange={(checked) =>
+                                    handleToggleShare(note, checked)
+                                  }
                                   // MODIFIED: Disable if no space/partner OR if note is already shared
-                                  disabled={!activeSpaceId || !partnerId || !!note.is_shared}
+                                  disabled={
+                                    !activeSpaceId ||
+                                    !partnerId ||
+                                    !!note.is_shared
+                                  }
                                 />
                               </div>
                             )}
