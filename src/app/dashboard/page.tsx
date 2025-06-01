@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import WeeklyCalendar from "@/components/dashboard/WeeklyCalendar";
 import {
@@ -23,6 +24,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCurrentUser } from "@/utils/user";
 import { redirect } from "next/navigation";
+
+// Import the new list components
+import MyNotesList from "@/components/dashboard/MyNotesList";
+import PartnerNotesList from "@/components/dashboard/PartnerNotesList";
 
 export default async function Dashboard() {
   const user = await getCurrentUser();
@@ -58,21 +63,21 @@ export default async function Dashboard() {
             <Tabs defaultValue="myNotes" className="w-[400px]">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="myNotes">My Notes</TabsTrigger>
-                <TabsTrigger value="notesByPartner">Notes by partner</TabsTrigger>
+                <TabsTrigger value="notesByPartner">
+                  Notes by Partner
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="myNotes">
                 <Card>
                   <CardHeader>
-                    <CardTitle>My Schedule for Today</CardTitle>
+                    <CardTitle>My Notes</CardTitle>
                     <CardDescription className="text-muted-foreground">
-                      Here&apos;s what&apos;s planned
+                      All your personal notes and tasks.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      No notes scheduled for today
-                    </p>
+                    <MyNotesList user={user} />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -82,13 +87,11 @@ export default async function Dashboard() {
                   <CardHeader>
                     <CardTitle>Partner&apos;s Notes</CardTitle>
                     <CardDescription className="text-muted-foreground">
-                      Notes shared with you
+                      Notes shared with you by your partner.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      No shared notes for today
-                    </p>
+                    <PartnerNotesList user={user} />
                   </CardContent>
                 </Card>
               </TabsContent>

@@ -395,7 +395,6 @@ export default function NotesClient({ user }: { user: User }) {
                     name="content"
                     value={formData.content}
                     onChange={handleChange}
-                    required
                   />
                 </div>
                 <div>
