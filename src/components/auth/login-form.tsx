@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react';
+import { toast } from 'sonner'; 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +19,24 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    const formData = new FormData(event.currentTarget); // Or construct from state
+
+    const result = await login(formData); // Call the server action
+
+    if (!result.success) {
+      toast.error(result.message); // Display toast with the error
+    }
+    setIsLoading(false);
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -66,7 +86,7 @@ export function LoginForm({
             </div>
             
             {/* Email/Password Form */}
-            <form action={login}>
+            <form onSubmit={handleSubmit}>
               <div className="grid gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
@@ -76,6 +96,8 @@ export function LoginForm({
                     type="email"
                     placeholder="email@example.com"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -88,10 +110,17 @@ export function LoginForm({
                       Forgot your password?
                     </a>
                   </div>
-                  <Input id="password" name="password" type="password" required />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
-                <Button type="submit" className="w-full">
-                  Login
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Logging in...' : 'Login'}
                 </Button>
               </div>
             </form>

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
+import crypto from 'crypto';
 
 // Email/Password Login
 export async function login(formData: FormData) {
@@ -17,10 +18,12 @@ export async function login(formData: FormData) {
 
   if (error) {
     console.error('Login error:', error)
-    redirect(`/error?message=${encodeURIComponent(error.message)}`)
+    // Return the error message instead of redirecting
+    return { success: false, message: error.message };
   }
 
   revalidatePath('/', 'layout')
+  // Redirect on success
   redirect('/dashboard')
 }
 
@@ -43,9 +46,8 @@ export async function signup(formData: FormData) {
   redirect('/error?message=Missing password fields');
 }
 
-
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const { error } = await supabase.auth.signUp({
+  const { data: authData, error } = await supabase.auth.signUp({ // Capture authData
     email,
     password,
     options: {
@@ -56,6 +58,14 @@ export async function signup(formData: FormData) {
   if (error) {
     console.error('Signup error:', error)
     redirect(`/error?message=${encodeURIComponent(error.message)}`)
+  }
+
+  if (authData?.user) {
+    if (authData.user && authData.user.email) {
+      await createUserProfile(authData.user as SupabaseUser);
+    } else {
+      console.error('User email is missing, cannot create user profile.');
+    }
   }
 
   revalidatePath('/', 'layout')
@@ -121,6 +131,7 @@ interface UserMetadata {
   first_name?: string;
   family_name?: string;
   last_name?: string;
+  avatar_url?: string;
 }
 
 interface SupabaseUser {
@@ -132,8 +143,13 @@ interface SupabaseUser {
 type UserUpdates = {
   first_name?: string;
   last_name?: string;
+  avatar_url?: string;
 };
 
+function getGravatarUrl(email: string) {
+  const hash = crypto.createHash('md5').update(email.trim().toLowerCase()).digest('hex');
+  return `https://www.gravatar.com/avatar/${hash}?d=identicon`; // 'd=identicon' provides a default image
+}
 
 // Function to create or update user profile
 export async function createUserProfile(user: SupabaseUser) {
@@ -150,6 +166,9 @@ export async function createUserProfile(user: SupabaseUser) {
     return;
   }
 
+  // Determine initial avatar_url (Gravatar or OAuth provider's avatar)
+  const initialAvatarUrl = user.user_metadata?.avatar_url || (user.email ? getGravatarUrl(user.email) : null);
+
   if (!existingUser) {
     // Create new user profile
     const { error: insertError } = await supabase
@@ -160,6 +179,7 @@ export async function createUserProfile(user: SupabaseUser) {
         username: user.user_metadata?.preferred_username || user.user_metadata?.user_name || user.email?.split('@')[0],
         first_name: user.user_metadata?.given_name || user.user_metadata?.first_name || '',
         last_name: user.user_metadata?.family_name || user.user_metadata?.last_name || '',
+        avatar_url: initialAvatarUrl,
         created_at: new Date().toISOString()
       }], { onConflict: 'id' });
 
@@ -178,6 +198,9 @@ export async function createUserProfile(user: SupabaseUser) {
     if (!existingUser.last_name && user.user_metadata?.family_name) {
       updates.last_name = user.user_metadata.family_name;
     }
+    if (!existingUser.avatar_url && initialAvatarUrl) {
+        updates.avatar_url = initialAvatarUrl;
+    }
     
     if (Object.keys(updates).length > 0) {
       const { error: updateError } = await supabase
@@ -190,4 +213,40 @@ export async function createUserProfile(user: SupabaseUser) {
       }
     }
   }
+}
+
+export async function updateProfileDetails(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    console.error('Not authenticated or no user found to update profile:', authError);
+    redirect('/login?message=Authentication required'); // Or handle gracefully
+  }
+
+  const firstName = formData.get('first_name') as string;
+  const lastName = formData.get('last_name') as string;
+  const avatarUrl = formData.get('avatar_url') as string; // Allow user to provide a URL
+
+  const updates: UserUpdates = {};
+  if (firstName) updates.first_name = firstName;
+  if (lastName) updates.last_name = lastName;
+  if (avatarUrl) updates.avatar_url = avatarUrl;
+
+
+  if (Object.keys(updates).length > 0) {
+    const { error: updateError } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('Error updating user profile details:', updateError);
+      return { success: false, message: updateError.message };
+    } else {
+      revalidatePath('/dashboard', 'layout'); // Revalidate dashboard to reflect changes
+      return { success: true, message: 'Profile updated successfully!' };
+    }
+  }
+  return { success: true, message: 'No changes to update.' }; // No updates were provided
 }

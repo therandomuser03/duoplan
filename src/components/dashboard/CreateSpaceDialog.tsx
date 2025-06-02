@@ -150,22 +150,21 @@ export function CreateSpaceDialog({
   const shareSpace = async () => {
     if (!createdSpaceId) return;
 
-    const shareData = {
-      title: `Join my space: ${spaceName}`,
-      text: `Join "${spaceName}" using ID: ${createdSpaceId}`,
-      url: `${window.location.origin}/join/${createdSpaceId}`,
-    };
+  const shareText = `Join my space using this ID: ${createdSpaceId}`;
 
-    try {
-      if (navigator.share && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareData.text);
-        toast.success("Share text copied!");
-      }
-    } catch (error) {
-      console.error("Share failed:", error);
-      toast.error("Could not share");
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Join My Space",
+        text: shareText,
+      });
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      toast.success("Space ID copied for sharing!");
+    }
+  } catch (error) {
+    console.error("Share failed:", error);
+    toast.error("Could not share");
     }
   };
 
