@@ -77,8 +77,25 @@ export default function SharedNotesClient({ user }: { user: User }) {
         throw new Error(`Outgoing notes error: ${outgoing.error}`);
       }
 
-      setIncomingNotes(Array.isArray(incoming) ? incoming : []);
-      setOutgoingNotes(Array.isArray(outgoing) ? outgoing : []);
+      setIncomingNotes(
+        Array.isArray(incoming)
+          ? incoming.sort((a, b) => {
+              const aTime = new Date(a.start_time || 0).getTime();
+              const bTime = new Date(b.start_time || 0).getTime();
+              return aTime - bTime;
+            })
+          : []
+      );
+
+      setOutgoingNotes(
+        Array.isArray(outgoing)
+          ? outgoing.sort((a, b) => {
+              const aTime = new Date(a.start_time || 0).getTime();
+              const bTime = new Date(b.start_time || 0).getTime();
+              return aTime - bTime;
+            })
+          : []
+      );
     } catch (error) {
       console.error("Failed to fetch shared notes", error);
       setError(
@@ -93,11 +110,11 @@ export default function SharedNotesClient({ user }: { user: User }) {
 
   useEffect(() => {
     fetchNotes();
-    const interval = setInterval(() => setTime(new Date()), 60000);
+    const interval = setInterval(() => setTime(new Date()), 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const formattedDate = format(time, "EEEE, MMMM d, yyyy");
+  const formattedDate = format(time, "PPPP");
   const formattedTime = format(time, "p");
 
   const formatDateTime = (dateString?: string) => {

@@ -1,8 +1,9 @@
 // app/api/notes/route.ts
-import { createClient } from '@/utils/supabase/server'; // Assuming you have a server-side Supabase client
-import { NextResponse } from 'next/server';
+import { createClient } from "@/utils/supabase/server";
+import { NextResponse } from "next/server";
 
 // --- POST method (for creating notes) ---
+// (Your existing POST function remains here - no changes needed from your provided code)
 export async function POST(request: Request) {
   const supabase = await createClient();
 
@@ -13,14 +14,23 @@ export async function POST(request: Request) {
 
   if (authError || !user) {
     console.error("Authentication error:", authError);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
-  const { title, content, start_time, end_time, color, shareWithPartner, activeSpaceId, partnerId } = body; 
+  const {
+    title,
+    content,
+    start_time,
+    end_time,
+    color,
+    shareWithPartner,
+    activeSpaceId,
+    partnerId,
+  } = body;
 
   const noteToInsert = {
-    user_id: user.id, // CRITICAL: Add the user ID here
+    user_id: user.id,
     title,
     content,
     start_time: start_time || null,
@@ -30,55 +40,67 @@ export async function POST(request: Request) {
 
   try {
     const { data: insertedNote, error: insertError } = await supabase
-      .from('notes')
+      .from("notes")
       .insert([noteToInsert])
       .select()
       .single();
 
     if (insertError) {
       console.error("Error inserting note:", insertError);
-      return NextResponse.json({ error: 'Failed to create note', details: insertError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to create note", details: insertError.message },
+        { status: 500 }
+      );
     }
 
-    if (shareWithPartner && activeSpaceId && partnerId) {
-    console.log("Attempting to share note on creation:", insertedNote.id, "to", partnerId, "in space", activeSpaceId);
-    const { error: shareError } = await supabase
-        .from('shared_notes')
-        .insert({
-            from_user_id: user.id,
-            to_user_id: partnerId,
-            space_id: activeSpaceId,
-            original_note_id: insertedNote.id, // <--- ADD THIS LINE
-            title: insertedNote.title,
-            content: insertedNote.content,
-            start_time: insertedNote.start_time,
-            end_time: insertedNote.end_time,
-            color: insertedNote.color,
-        });
+    if (shareWithPartner && activeSpaceId && partnerId && insertedNote) {
+      // Ensure insertedNote is not null
+      console.log(
+        "Attempting to share note on creation:",
+        insertedNote.id,
+        "to",
+        partnerId,
+        "in space",
+        activeSpaceId
+      );
+      const { error: shareError } = await supabase.from("shared_notes").insert({
+        from_user_id: user.id,
+        to_user_id: partnerId,
+        space_id: activeSpaceId,
+        original_note_id: insertedNote.id,
+        title: insertedNote.title,
+        content: insertedNote.content,
+        start_time: insertedNote.start_time,
+        end_time: insertedNote.end_time,
+        color: insertedNote.color,
+      });
 
       if (shareError) {
         console.error("Error sharing note on creation:", shareError);
-        // Do not return error here, note is already created. Log it.
       } else {
         console.log("Note successfully shared on creation.");
       }
     }
-
-    return NextResponse.json({ message: 'Note created successfully!', note: insertedNote }, { status: 201 });
-
+    return NextResponse.json(
+      { message: "Note created successfully!", note: insertedNote },
+      { status: 201 }
+    );
   } catch (runtimeError) {
     console.error("Runtime error during note creation:", runtimeError);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-// --- GET method (for fetching notes) ---
+// --- GET method (for fetching notes) --- MODIFIED
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { searchParams } = new URL(request.url);
-  const selectedDate = searchParams.get('date');
-  const partnerId = searchParams.get('partnerId');
-  const activeSpaceId = searchParams.get('activeSpaceId');
+  const selectedDate = searchParams.get("date"); // Will be used if provided
+  const partnerId = searchParams.get("partnerId");
+  const activeSpaceId = searchParams.get("activeSpaceId");
 
   const {
     data: { user },
@@ -87,70 +109,83 @@ export async function GET(request: Request) {
 
   if (authError || !user) {
     console.error("Authentication error:", authError);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (!selectedDate) {
-    return NextResponse.json({ error: 'Date parameter is required' }, { status: 400 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // Supabase stores timestamptz, so we need to query for notes within the selected day
-    const startDate = `${selectedDate}T00:00:00.000Z`; // Start of the selected day in UTC
-    const endDate = `${selectedDate}T23:59:59.999Z`;   // End of the selected day in UTC
+    let query = supabase.from("notes").select("*").eq("user_id", user.id);
 
-    const { data: notes, error: fetchError } = await supabase
-      .from('notes')
-      .select('*')
-      .eq('user_id', user.id) // Filter by the current user's ID
-      .gte('created_at', startDate) // Notes created on or after the start of the day
-      .lte('created_at', endDate)   // Notes created on or before the end of the day
-      .order('created_at', { ascending: true }); // Order by creation time
+    // If selectedDate is provided, filter by created_at.
+    // Otherwise, fetch all notes for the user (allowing client-side span filtering).
+    if (selectedDate) {
+      const startDate = `${selectedDate}T00:00:00.000Z`; // Start of the selected day in UTC
+      const endDate = `${selectedDate}T23:59:59.999Z`; // End of the selected day in UTC
+      query = query.gte("created_at", startDate).lte("created_at", endDate);
+    }
+    // You might want to add other filters here if needed, e.g., based on activeSpaceId
+    // if notes are context-specific even when fetching "all" for the user.
+
+    query = query.order("created_at", { ascending: true }); // Order by creation time
+
+    const { data: notes, error: fetchError } = await query;
 
     if (fetchError) {
       console.error("Error fetching notes:", fetchError);
-      return NextResponse.json({ error: 'Failed to fetch notes', details: fetchError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to fetch notes", details: fetchError.message },
+        { status: 500 }
+      );
     }
 
-    if (partnerId && activeSpaceId) {
-    const { data: sharedNoteLinks, error: fetchSharedError } = await supabase
-        .from('shared_notes')
-        .select('original_note_id') // Fetch only the original_note_id
-        .eq('from_user_id', user.id) // Notes shared *by* the current user
-        .eq('to_user_id', partnerId)
-        .eq('space_id', activeSpaceId);
+    // Logic to determine `is_shared` status
+    if (partnerId && activeSpaceId && notes) {
+      // Ensure notes is not null
+      const { data: sharedNoteLinks, error: fetchSharedError } = await supabase
+        .from("shared_notes")
+        .select("original_note_id")
+        .eq("from_user_id", user.id)
+        .eq("to_user_id", partnerId)
+        .eq("space_id", activeSpaceId);
 
-    if (fetchSharedError) {
+      if (fetchSharedError) {
         console.error("Error fetching shared note links:", fetchSharedError);
-        // Decide how to handle this error. For now, continue but log.
+        // Continue without shared status if this fails, or handle error more strictly
+      }
+
+      const sharedNoteIds = new Set(
+        sharedNoteLinks?.map((link) => link.original_note_id) || []
+      );
+      const notesWithSharedStatus = notes.map((note) => ({
+        ...note,
+        is_shared: sharedNoteIds.has(note.id),
+      }));
+      return NextResponse.json(notesWithSharedStatus, { status: 200 });
+    } else if (notes) {
+      // Ensure notes is not null
+      // If no partner or space, notes cannot be marked as shared in this context
+      const notesWithoutSharedStatus = notes.map((note) => ({
+        ...note,
+        is_shared: false,
+      }));
+      return NextResponse.json(notesWithoutSharedStatus, { status: 200 });
+    } else {
+      return NextResponse.json([], { status: 200 }); // Return empty array if notes is null/undefined
     }
-
-    // Create a Set for efficient lookup of shared note IDs
-    const sharedNoteIds = new Set(sharedNoteLinks?.map(link => link.original_note_id));
-
-    const notesWithSharedStatus = notes.map(note => {
-        // Check if the current note's ID exists in the set of sharedNoteIds
-        const isShared = sharedNoteIds.has(note.id);
-        return { ...note, is_shared: isShared };
-    });
-    return NextResponse.json(notesWithSharedStatus, { status: 200 });
-
-} else {
-    // If no partner or space, notes cannot be shared, so is_shared is always false
-    const notesWithoutSharedStatus = notes.map(note => ({ ...note, is_shared: false }));
-    return NextResponse.json(notesWithoutSharedStatus, { status: 200 });
-}
-
   } catch (runtimeError) {
     console.error("Runtime error during notes fetch:", runtimeError);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
+// --- DELETE method (for deleting notes) ---
+// (Your existing DELETE function remains here - no changes needed from your provided code)
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const { searchParams } = new URL(request.url);
-  const noteId = searchParams.get('id'); // Get the note ID from URL query params
+  const noteId = searchParams.get("id");
 
   const {
     data: { user },
@@ -159,30 +194,37 @@ export async function DELETE(request: Request) {
 
   if (authError || !user) {
     console.error("Authentication error:", authError);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (!noteId) {
-    return NextResponse.json({ error: 'Note ID is required' }, { status: 400 });
+    return NextResponse.json({ error: "Note ID is required" }, { status: 400 });
   }
 
   try {
-    // Delete the note, ensuring it belongs to the authenticated user
     const { error: deleteError } = await supabase
-      .from('notes')
+      .from("notes")
       .delete()
-      .eq('id', noteId)
-      .eq('user_id', user.id); // Crucial for security and RLS
+      .eq("id", noteId)
+      .eq("user_id", user.id);
 
     if (deleteError) {
       console.error("Error deleting note:", deleteError);
-      return NextResponse.json({ error: 'Failed to delete note', details: deleteError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to delete note", details: deleteError.message },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ message: 'Note deleted successfully!' }, { status: 200 });
-
+    return NextResponse.json(
+      { message: "Note deleted successfully!" },
+      { status: 200 }
+    );
   } catch (runtimeError) {
     console.error("Runtime error during note deletion:", runtimeError);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

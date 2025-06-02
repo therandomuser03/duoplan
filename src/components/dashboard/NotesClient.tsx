@@ -1,3 +1,4 @@
+// components/dashboard/NotesClient.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -30,13 +31,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/utils/supabase/client";
-import { Trash2 } from "lucide-react";
-import { toast } from "sonner"; // Import toast from Sonner
+import { Trash2, RefreshCw } from "lucide-react"; // Added RefreshCw import
+import { toast } from "sonner";
+import {
+  format,
+  parseISO,
+  isSameDay,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
+} from "date-fns";
 
 interface User {
   name: string;
   email: string;
   avatar: string;
+}
+
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  start_time?: string;
+  end_time?: string;
+  color?: string;
+  created_at: string;
+  user_id: string;
+  is_shared?: boolean;
 }
 
 export default function NotesClient({ user }: { user: User }) {
@@ -54,21 +75,11 @@ export default function NotesClient({ user }: { user: User }) {
     () => new Date().toISOString().split("T")[0]
   );
 
-  interface Note {
-    id: string;
-    title: string;
-    content: string;
-    start_time?: string;
-    end_time?: string;
-    color?: string;
-    created_at: string;
-    user_id: string;
-    is_already_shared?: boolean; // Keeping this if used elsewhere, but focusing on is_shared
-    is_shared?: boolean;
-  }
-
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [allNotes, setAllNotes] = useState<Note[]>([]);
+  const [displayedNotes, setDisplayedNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null); // Added error state
+  const [time, setTime] = useState(new Date()); // Added time state for header
 
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
@@ -103,7 +114,6 @@ export default function NotesClient({ user }: { user: User }) {
       } = await supabase.auth.getUser();
       if (authError || !currentUser) {
         console.error("Auth error fetching user:", authError);
-        // toast.error("Authentication error. Please try again."); // Optional: notify user
         return;
       }
       setCurrentUserId(currentUser.id);
@@ -115,18 +125,17 @@ export default function NotesClient({ user }: { user: User }) {
 
       if (spacesError) {
         console.error("Error fetching spaces:", spacesError);
-        // toast.error("Could not fetch your space details."); // Optional: notify user
         return;
       }
 
       if (spaces && spaces.length > 0) {
         const activeSpace = spaces[0];
         setActiveSpaceId(activeSpace.id);
-        const partnerId =
+        const determinedPartnerId =
           activeSpace.user_a_id === currentUser.id
             ? activeSpace.user_b_id
             : activeSpace.user_a_id;
-        setPartnerId(partnerId);
+        setPartnerId(determinedPartnerId);
       } else {
         setActiveSpaceId(null);
         setPartnerId(null);
@@ -140,7 +149,6 @@ export default function NotesClient({ user }: { user: User }) {
     e.preventDefault();
     const toastId = toast.loading("Creating note...");
 
-    // Convert local datetime-local strings to ISO 8601 UTC strings
     const startTimeUTC = formData.start_time
       ? new Date(formData.start_time).toISOString()
       : null;
@@ -150,8 +158,8 @@ export default function NotesClient({ user }: { user: User }) {
 
     const notePayload = {
       ...formData,
-      start_time: startTimeUTC, // Send UTC string to API
-      end_time: endTimeUTC, // Send UTC string to API
+      start_time: startTimeUTC,
+      end_time: endTimeUTC,
       shareWithPartner,
       activeSpaceId: shareWithPartner ? activeSpaceId : null,
       partnerId: shareWithPartner ? partnerId : null,
@@ -174,7 +182,7 @@ export default function NotesClient({ user }: { user: User }) {
           color: "",
         });
         setShareWithPartner(false);
-        fetchNotes();
+        fetchNotes(); // Re-fetch all notes
       } else {
         const errorData = await res.json();
         toast.error(
@@ -205,7 +213,7 @@ export default function NotesClient({ user }: { user: User }) {
 
       if (res.ok) {
         toast.success("Note deleted successfully!", { id: toastId });
-        fetchNotes();
+        fetchNotes(); // Re-fetch all notes
       } else {
         const errorData = await res.json();
         toast.error(
@@ -255,7 +263,7 @@ export default function NotesClient({ user }: { user: User }) {
 
         if (res.ok) {
           toast.success("Note shared successfully!", { id: toastId });
-          fetchNotes();
+          fetchNotes(); // Re-fetch all notes to update shared status
         } else {
           const errorData = await res.json();
           toast.error(
@@ -263,7 +271,7 @@ export default function NotesClient({ user }: { user: User }) {
             { id: toastId }
           );
           console.error("Failed to share note:", errorData);
-          fetchNotes(); // Re-fetch to revert switch state if API failed
+          fetchNotes();
         }
       } catch (err) {
         console.error("Error sharing note:", err);
@@ -288,7 +296,6 @@ export default function NotesClient({ user }: { user: User }) {
             note.title
           )}&content=${encodeURIComponent(note.content)}`,
           {
-            // Ensure your DELETE endpoint can handle these params
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
           }
@@ -296,7 +303,7 @@ export default function NotesClient({ user }: { user: User }) {
 
         if (res.ok) {
           toast.success("Note unshared successfully!", { id: toastId });
-          fetchNotes();
+          fetchNotes(); // Re-fetch all notes to update shared status
         } else {
           const errorData = await res.json();
           toast.error(
@@ -317,12 +324,12 @@ export default function NotesClient({ user }: { user: User }) {
   };
 
   const fetchNotes = useCallback(async () => {
-    setLoading(true);
-    const queryParams = new URLSearchParams({
-      date: selectedDate,
-    });
+    if (!currentUserId) return;
 
-    // These are crucial for the backend to determine `is_shared` status correctly
+    setLoading(true);
+    setError(null); // Clear previous errors
+    const queryParams = new URLSearchParams();
+
     if (partnerId && activeSpaceId) {
       queryParams.append("partnerId", partnerId);
       queryParams.append("activeSpaceId", activeSpaceId);
@@ -332,48 +339,145 @@ export default function NotesClient({ user }: { user: User }) {
       const res = await fetch(`/api/notes?${queryParams.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setNotes(data);
+        setAllNotes(Array.isArray(data) ? data : []);
       } else {
-        setNotes([]);
-        toast.error("Failed to fetch notes.");
+        const errorData = await res.json(); // Get error data from response
+        const errorMessage =
+          errorData.message || res.statusText || "Failed to fetch notes.";
+        setError(errorMessage);
+        setAllNotes([]);
+        toast.error(`Error fetching notes: ${errorMessage}`);
+        console.error("Failed to fetch notes:", errorData);
       }
     } catch (error) {
       console.error("Error fetching notes:", error);
-      setNotes([]);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred."
+      );
+      setAllNotes([]);
       toast.error("An error occurred while fetching notes.");
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, partnerId, activeSpaceId]); // Dependencies are important
+  }, [currentUserId, partnerId, activeSpaceId]);
 
   useEffect(() => {
     if (currentUserId) {
-      // Fetch notes only after currentUserId is known
       fetchNotes();
     }
-  }, [fetchNotes, currentUserId]); // Add currentUserId
+  }, [fetchNotes, currentUserId]);
+
+  // Effect for updating the current time in the header
+  useEffect(() => {
+    const interval = setInterval(() => setTime(new Date()), 5000); // Update every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const formattedDate = format(time, "PPPP");
+  const formattedTime = format(time, "p");
+
+  const filterNotesByDate = useCallback(
+    (notesToFilter: Note[], dateString: string): Note[] => {
+      if (!dateString) return notesToFilter;
+
+      try {
+        const selectedDateObj = parseISO(dateString);
+        const dayStart = startOfDay(selectedDateObj);
+        const dayEnd = endOfDay(selectedDateObj);
+
+        return notesToFilter.filter((note) => {
+          if (note.start_time || note.end_time) {
+            const startTime = note.start_time
+              ? parseISO(note.start_time)
+              : dayStart;
+            const endTime = note.end_time
+              ? parseISO(note.end_time)
+              : note.start_time
+              ? endOfDay(startTime)
+              : dayEnd;
+
+            return (
+              isWithinInterval(selectedDateObj, {
+                start: startOfDay(startTime),
+                end: endOfDay(endTime),
+              }) ||
+              isWithinInterval(dayStart, { start: startTime, end: endTime }) ||
+              isWithinInterval(dayEnd, { start: startTime, end: endTime }) ||
+              (isSameDay(startTime, selectedDateObj) &&
+                isSameDay(endTime, selectedDateObj))
+            );
+          } else {
+            const createdDate = parseISO(note.created_at);
+            return isSameDay(createdDate, selectedDateObj);
+          }
+        });
+      } catch (error) {
+        console.error("Error parsing date or filtering notes:", error);
+        return [];
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (allNotes.length > 0 || !loading) {
+      const filtered = filterNotesByDate(allNotes, selectedDate);
+      const sorted = filtered.sort((a, b) => {
+        const aTime = new Date(a.start_time || a.created_at || 0).getTime();
+        const bTime = new Date(b.start_time || b.created_at || 0).getTime();
+        return aTime - bTime;
+      });
+      setDisplayedNotes(sorted);
+    } else {
+      setDisplayedNotes([]);
+    }
+  }, [allNotes, selectedDate, filterNotesByDate, loading]);
 
   return (
     <SidebarProvider>
       <AppSidebar user={user} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Notes</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+        {/* HEADER */}
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Notes</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </header>
+
+        {/* DATE + TIME HEADER */}
+        <div className="px-4 py-2 flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            {formattedDate} — {formattedTime}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchNotes}
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
+
+        {/* ERROR ALERT */}
+        {error && (
+          <div className="px-4 pb-2">
+            {/* You might want to use an Alert component from shadcn/ui here */}
+            <p className="text-red-500 text-sm">{error}</p>
+          </div>
+        )}
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -482,12 +586,12 @@ export default function NotesClient({ user }: { user: User }) {
                 <div className="space-y-2 mt-4">
                   {loading ? (
                     <p>Loading notes...</p>
-                  ) : notes.length === 0 ? (
+                  ) : displayedNotes.length === 0 ? (
                     <p className="text-muted-foreground">
                       No notes for this date. Create one!
                     </p>
                   ) : (
-                    notes.map((note) => (
+                    displayedNotes.map((note) => (
                       <Card
                         key={note.id}
                         className="p-4 border-l-4"
@@ -496,8 +600,7 @@ export default function NotesClient({ user }: { user: User }) {
                         <h3 className="font-semibold">{note.title}</h3>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                           {note.content}
-                        </p>{" "}
-                        {/* Added whitespace-pre-wrap */}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {note.start_time && note.end_time
                             ? `${new Date(note.start_time).toLocaleTimeString(
@@ -539,7 +642,6 @@ export default function NotesClient({ user }: { user: User }) {
                                   onCheckedChange={(checked) =>
                                     handleToggleShare(note, checked)
                                   }
-                                  // MODIFIED: Disable if no space/partner OR if note is already shared
                                   disabled={
                                     !activeSpaceId ||
                                     !partnerId ||
