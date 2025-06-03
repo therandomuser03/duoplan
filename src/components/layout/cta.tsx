@@ -9,8 +9,7 @@ export default function CTA() {
           Ready to Get Started?
         </h2>
         <p className="mb-10 max-w-2xl text-xl text-muted-foreground">
-          Join thousands of couples who are already using DuoPlan to simplify
-          their shared scheduling.
+          Test our app to simplify your shared scheduling with your closed ones.
         </p>
         <Button asChild size="lg" className="px-8">
           <Link href="auth">Try DuoPlan Now</Link>
