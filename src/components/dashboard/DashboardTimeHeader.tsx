@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button"; // Assuming you have Button component
 import { RefreshCw } from "lucide-react"; // Assuming you have lucide-react for icons
+import { toast } from "sonner";
 
 interface DashboardTimeHeaderProps {
   onRefresh?: () => void; // Optional callback for refresh action
@@ -13,6 +14,7 @@ interface DashboardTimeHeaderProps {
 
 export default function DashboardTimeHeader({ onRefresh, isLoading }: DashboardTimeHeaderProps) {
   const [time, setTime] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     // Update the time every 5 seconds (or your preferred interval)
@@ -24,12 +26,21 @@ export default function DashboardTimeHeader({ onRefresh, isLoading }: DashboardT
   const formattedDate = format(time, "PPPP"); // Example: Monday, June 3, 2024
   const formattedTime = format(time, "p"); // Example: 10:30 PM
 
-  const handleButtonClick = () => {
-    if (onRefresh) {
-      onRefresh(); // Call the provided onRefresh function if it exists
-    } else {
-      console.log("Refresh button clicked. No specific onRefresh handler provided to DashboardTimeHeader.");
-      // You could add a toast notification here if you want to inform the user
+  const handleButtonClick = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      if (onRefresh) {
+        onRefresh();
+      }
+      toast.success("Refreshing notes...");
+    } catch (error) {
+      toast.error("Failed to refresh notes");
+      console.error("Refresh error:", error);
+    } finally {
+      // Keep the refreshing state for a bit to show the animation
+      setTimeout(() => setIsRefreshing(false), 1000);
     }
   };
 
@@ -42,10 +53,10 @@ export default function DashboardTimeHeader({ onRefresh, isLoading }: DashboardT
         variant="outline"
         size="sm"
         onClick={handleButtonClick} // Use the internal handler
-        disabled={isLoading}
+        disabled={isRefreshing || isLoading}
         className="flex items-center gap-2"
       >
-        <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+        <RefreshCw className={`h-4 w-4 ${(isRefreshing || isLoading) ? "animate-spin" : ""}`} />
         Refresh
       </Button>
     </div>

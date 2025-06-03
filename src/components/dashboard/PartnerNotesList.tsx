@@ -10,6 +10,7 @@ import { format, isSameDay, parseISO, isWithinInterval, startOfDay, endOfDay } f
 import { Badge } from "../ui/badge";
 import { CalendarCheck2, CalendarDays, PencilLine } from "lucide-react";
 import { useSpace } from '@/contexts/SpaceContext';
+import { createClient } from "@/utils/supabase/client";
 
 interface User {
   name: string;
@@ -117,42 +118,48 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
     setLoading(true);
     setError(null);
     try {
+      console.log("🔍 Fetching incoming notes...", { currentSpaceId });
       if (!currentSpaceId) {
+        console.log("❌ No currentSpaceId available");
         setAllIncomingNotes([]);
         setLoading(false);
         return;
       }
-      const incomingRes = await fetch(`/api/shared-notes?direction=incoming&space_id=${currentSpaceId}`);
-      if (!incomingRes.ok) {
-        throw new Error(`HTTP error! Incoming: ${incomingRes.status}`);
+
+      const res = await fetch(
+        `/api/shared-notes?direction=incoming&space_id=${currentSpaceId}`
+      );
+      
+      if (!res.ok) {
+        throw new Error("Failed to fetch shared notes");
       }
-      const incoming = await incomingRes.json();
-      if (incoming.error) {
-        throw new Error(`Incoming notes error: ${incoming.error}`);
-      }
-      if (Array.isArray(incoming)) {
-        const now = Date.now();
-        const sorted = incoming.sort((a, b) => {
-          const aTime = new Date(a.start_time || a.created_at || 0).getTime();
-          const bTime = new Date(b.start_time || b.created_at || 0).getTime();
-          return aTime - bTime;
-        });
-        const newIds = sorted
-          .filter((note) => {
-            const created = new Date(note.created_at).getTime();
-            return now - created < 5 * 60 * 1000; // less than 5 min
-          })
-          .map((note) => note.id);
-        setAllIncomingNotes(sorted);
-        setNewNoteIds(new Set(newIds));
-        setTimeout(() => {
-          setNewNoteIds(new Set());
-        }, 5 * 60 * 1000);
-      } else {
-        setAllIncomingNotes([]);
-      }
+
+      const sharedNotes = await res.json();
+      console.log("✅ Shared notes:", sharedNotes);
+
+      const now = Date.now();
+      const sorted = sharedNotes.sort((a: SharedNote, b: SharedNote) => {
+        const aTime = new Date(a.start_time || a.created_at || 0).getTime();
+        const bTime = new Date(b.start_time || b.created_at || 0).getTime();
+        return aTime - bTime;
+      });
+
+      const newIds = sorted
+        .filter((note: SharedNote) => {
+          const created = new Date(note.created_at).getTime();
+          return now - created < 5 * 60 * 1000; // less than 5 min
+        })
+        .map((note: SharedNote) => note.id);
+
+      console.log("✅ Setting notes:", sorted);
+      setAllIncomingNotes(sorted);
+      setNewNoteIds(new Set(newIds));
+      setTimeout(() => {
+        setNewNoteIds(new Set());
+      }, 5 * 60 * 1000);
+
     } catch (error) {
-      console.error("Failed to fetch incoming shared notes", error);
+      console.error("❌ Failed to fetch incoming shared notes:", error);
       setError(
         error instanceof Error
           ? error.message

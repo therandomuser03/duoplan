@@ -120,26 +120,27 @@ export default function NotesClient({ user }: { user: User }) {
       }
       setCurrentUserId(currentUser.id);
 
-      const { data: spaces, error: spacesError } = await supabase
-        .from("spaces")
-        .select("*")
-        .or(`user_a_id.eq.${currentUser.id},user_b_id.eq.${currentUser.id}`);
-
-      if (spacesError) {
-        console.error("Error fetching spaces:", spacesError);
+      if (!currentSpaceId) {
+        setPartnerId(null);
         return;
       }
 
-      if (spaces && spaces.length > 0) {
-        const activeSpace = spaces[0];
-        setPartnerId(activeSpace.user_a_id === currentUser.id ? activeSpace.user_b_id : activeSpace.user_a_id);
-      } else {
+      const { data: space, error: spaceError } = await supabase
+        .from("spaces")
+        .select("*")
+        .eq("id", currentSpaceId)
+        .single();
+
+      if (spaceError || !space) {
         setPartnerId(null);
+        return;
       }
+
+      setPartnerId(space.user_a_id === currentUser.id ? space.user_b_id : space.user_a_id);
     };
 
     fetchSpaceAndPartner();
-  }, [supabase]);
+  }, [supabase, currentSpaceId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,7 +157,7 @@ export default function NotesClient({ user }: { user: User }) {
       ...formData,
       start_time: startTimeUTC,
       end_time: endTimeUTC,
-      space_id: currentSpaceId,
+      activeSpaceId: currentSpaceId,
       shareWithPartner,
       partnerId: shareWithPartner ? partnerId : null,
     };
@@ -227,53 +228,44 @@ export default function NotesClient({ user }: { user: User }) {
   };
 
   const handleToggleShare = async (note: Note, checked: boolean) => {
-    if (!currentSpaceId || !partnerId || !currentUserId) {
-      toast.error(
-        "Cannot share/unshare: Space or partner information is missing."
-      );
+    if (!note.id || !currentSpaceId || !partnerId || !currentUserId) {
+      toast.error("Missing note, space, or partner ID!");
+      console.error("Missing IDs", { noteId: note.id, currentSpaceId, partnerId, currentUserId });
       return;
     }
 
     let toastId: string | number | undefined;
 
     if (checked) {
-      // User wants to SHARE
-      if (
-        !confirm(
-          `Are you sure you want to share "${note.title}" with your partner?`
-        )
-      ) {
+      if (!confirm(`Are you sure you want to share "${note.title}" with your partner?`)) {
         return;
       }
       toastId = toast.loading("Sharing note...");
       try {
+        const payload = {
+          noteId: note.id,
+          activeSpaceId: currentSpaceId,
+          partnerId: partnerId,
+        };
+        console.log("Sharing note with payload:", payload);
         const res = await fetch("/api/shared-notes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            noteId: note.id,
-            space_id: currentSpaceId,
-            partnerId: partnerId,
-          }),
+          body: JSON.stringify(payload),
         });
+        const data = await res.json();
+        console.log("Share note response:", data);
 
         if (res.ok) {
           toast.success("Note shared successfully!", { id: toastId });
-          fetchNotes(); // Re-fetch all notes to update shared status
+          fetchNotes();
         } else {
-          const errorData = await res.json();
-          toast.error(
-            `Failed to share note: ${errorData.message || res.statusText}`,
-            { id: toastId }
-          );
-          console.error("Failed to share note:", errorData);
+          toast.error(`Failed to share note: ${data.error || res.statusText}`, { id: toastId });
           fetchNotes();
         }
       } catch (err) {
         console.error("Error sharing note:", err);
-        toast.error("Error sharing note. Check console for details.", {
-          id: toastId,
-        });
+        toast.error("Error sharing note. Check console for details.", { id: toastId });
         fetchNotes();
       }
     } else {
@@ -339,7 +331,16 @@ export default function NotesClient({ user }: { user: User }) {
         .or(`from_user_id.eq.${currentUserId},to_user_id.eq.${currentUserId}`);
       if (sharedNotesError) throw sharedNotesError;
 
-      setAllNotes([...(notes || []), ...(sharedNotes || [])]);
+      // Get shared note IDs to mark original notes as shared
+      const sharedNoteIds = new Set(sharedNotes?.map(note => note.original_note_id) || []);
+      
+      // Mark notes as shared if they are in the shared_notes table
+      const notesWithSharedStatus = notes?.map(note => ({
+        ...note,
+        is_shared: sharedNoteIds.has(note.id)
+      })) || [];
+
+      setAllNotes(notesWithSharedStatus);
     } catch (error) {
       setAllNotes([]);
       toast.error('Failed to fetch notes.');
@@ -423,7 +424,9 @@ export default function NotesClient({ user }: { user: User }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} />
+      <AppSidebar user={user} selectedDate={""} onDateSelect={function (date: string): void {
+        throw new Error("Function not implemented.");
+      } } />
       <SidebarInset>
         {/* HEADER */}
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">

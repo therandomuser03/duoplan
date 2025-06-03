@@ -124,10 +124,19 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
         .from('shared_notes')
         .select('*')
         .eq('space_id', currentSpaceId)
-        .or(`from_user_id.eq.${currentUserId},to_user_id.eq.${currentUserId}`);
+        .eq('from_user_id', currentUserId);
       if (sharedNotesError) throw sharedNotesError;
 
-      setAllNotes([...(notes || []), ...(sharedNotes || [])]);
+      // Get shared note IDs to mark original notes as shared
+      const sharedNoteIds = new Set(sharedNotes?.map(note => note.original_note_id) || []);
+      
+      // Mark notes as shared if they are in the shared_notes table
+      const notesWithSharedStatus = notes?.map(note => ({
+        ...note,
+        is_shared: sharedNoteIds.has(note.id)
+      })) || [];
+
+      setAllNotes(notesWithSharedStatus);
     } catch (error) {
       setAllNotes([]);
       toast.error('Failed to fetch notes.');

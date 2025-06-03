@@ -31,6 +31,15 @@ interface DashboardContentProps {
 export default function DashboardContent({ user, selectedDate, onDateChange }: DashboardContentProps) {
   const { currentSpaceId } = useSpace();
   const [partnerFirstName, setPartnerFirstName] = useState<string>("Partner");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setRefreshKey(prev => prev + 1);
+    // Reset refreshing state after a short delay to show the loading animation
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
 
   useEffect(() => {
     const fetchPartnerName = async () => {
@@ -102,6 +111,7 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
                 user={user} 
                 selectedDate={selectedDate}
                 onDateChange={onDateChange}
+                key={`my-notes-${refreshKey}`}
               />
             </CardContent>
           </Card>
@@ -120,6 +130,7 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
                 user={user} 
                 selectedDate={selectedDate}
                 onDateChange={onDateChange}
+                key={`partner-notes-${refreshKey}`}
               />
             </CardContent>
           </Card>

@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/utils/user";
 import { redirect } from "next/navigation";
-import SharedNotesClient from "@/components/dashboard/SharedNotesClient";
+import SharedNotesClient from "@/components/dashboard/shared-notes/SharedNotesClient";
 
 export default async function SharedNotesPage() {
   const user = await getCurrentUser();

@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     start_time: start_time || null,
     end_time: end_time || null,
     color: color || null,
+    space_id: activeSpaceId || null,
   };
 
   try {
@@ -54,15 +55,7 @@ export async function POST(request: Request) {
     }
 
     if (shareWithPartner && activeSpaceId && partnerId && insertedNote) {
-      // Ensure insertedNote is not null
-      console.log(
-        "Attempting to share note on creation:",
-        insertedNote.id,
-        "to",
-        partnerId,
-        "in space",
-        activeSpaceId
-      );
+      // Instead of creating a new note, just create a sharing record
       const { error: shareError } = await supabase.from("shared_notes").insert({
         from_user_id: user.id,
         to_user_id: partnerId,
@@ -77,6 +70,7 @@ export async function POST(request: Request) {
 
       if (shareError) {
         console.error("Error sharing note on creation:", shareError);
+        // Even if sharing fails, we still return the created note
       } else {
         console.log("Note successfully shared on creation.");
       }

@@ -45,9 +45,14 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSidebarProps) {
   const supabase = createClient();
   const [userId, setUserId] = React.useState<string | null>(null);
-
+  const [userData, setUserData] = React.useState<{
+    name: string;
+    email: string;
+    avatar: string;
+  } | null>(null);
+  
   React.useEffect(() => {
-    const getUserId = async () => {
+    const getUserData = async () => {
       const {
         data: { user },
         error,
@@ -55,15 +60,35 @@ export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSi
 
       if (user?.id) {
         setUserId(user.id);
+        
+        // Fetch user profile data
+        const { data: profileData, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error("❌ Error fetching user profile:", profileError);
+          return;
+        }
+
+        if (profileData) {
+          setUserData({
+            name: profileData.first_name + (profileData.last_name ? ` ${profileData.last_name}` : ''),
+            email: profileData.email,
+            avatar: profileData.avatar_url || '',
+          });
+        }
       } else {
         console.error("❌ No user ID found", error);
       }
     };
 
-    getUserId();
+    getUserData();
   }, [supabase]);
 
-  if (!userId) return null;
+  if (!userId || !userData) return null;
 
   return (
     <Sidebar {...props}>
@@ -82,7 +107,7 @@ export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSi
       </SidebarContent>
       <SidebarFooter>
         <NavSecondary items={staticData.navSecondary} />
-        <NavUser user={user} />
+        <NavUser user={userData} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

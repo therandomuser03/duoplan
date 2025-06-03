@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   // Changed default redirect to /user/account to allow users to complete their profile
-  const next = searchParams.get('next') ?? '/user/account' // <-- MODIFIED DEFAULT REDIRECT
+  const next = searchParams.get('next') ?? '/dashboard' // <-- MODIFIED DEFAULT REDIRECT
 
   if (code) {
     const supabase = await createClient()
