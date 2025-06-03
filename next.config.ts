@@ -7,10 +7,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/notes', destination: '/dashboard/notes',
+        source: '/events', destination: '/dashboard/events',
       },
       {
-        source: '/shared-notes', destination: '/dashboard/shared-notes',
+        source: '/shared-events', destination: '/dashboard/shared-events',
       },
       {
         source: '/account', destination: '/user/account',

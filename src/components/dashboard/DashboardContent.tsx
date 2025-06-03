@@ -102,7 +102,7 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
         <TabsContent value="myNotes">
           <Card>
             <CardHeader>
-              <CardTitle>My Notes</CardTitle>
+              <CardTitle>My Events</CardTitle>
               <CardDescription className="text-muted-foreground">
                 All your personal notes and tasks.
               </CardDescription>
@@ -121,9 +121,9 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
         <TabsContent value="notesByPartner">
           <Card>
             <CardHeader>
-              <CardTitle>Partner&apos;s Notes</CardTitle>
+              <CardTitle>Partner&apos;s Events</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Notes shared with you by {partnerFirstName}.
+                Events shared with you by {partnerFirstName}.
               </CardDescription>
             </CardHeader>
             <CardContent className="h-full flex flex-col overflow-hidden">
