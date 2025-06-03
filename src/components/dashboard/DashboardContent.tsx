@@ -95,8 +95,8 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
 
       <Tabs defaultValue="myNotes" className="w-[400px]">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="myNotes">My Notes</TabsTrigger>
-          <TabsTrigger value="notesByPartner">Notes by {partnerFirstName}</TabsTrigger>
+          <TabsTrigger value="myNotes">My Events</TabsTrigger>
+          <TabsTrigger value="notesByPartner">Events by {partnerFirstName}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="myNotes">
