@@ -144,7 +144,7 @@ export default function NotesClient({ user }: { user: User }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const toastId = toast.loading("Creating note...");
+    const toastId = toast.loading("Creating event...");
 
     const startTimeUTC = formData.start_time
       ? new Date(formData.start_time).toISOString()
@@ -170,7 +170,7 @@ export default function NotesClient({ user }: { user: User }) {
       });
 
       if (res.ok) {
-        toast.success("Note created successfully!", { id: toastId });
+        toast.success("Event created successfully!", { id: toastId });
         setFormData({
           title: "",
           content: "",
@@ -183,10 +183,10 @@ export default function NotesClient({ user }: { user: User }) {
       } else {
         const errorData = await res.json();
         toast.error(
-          `Failed to create note: ${errorData.message || res.statusText}`,
+          `Failed to create event: ${errorData.message || res.statusText}`,
           { id: toastId }
         );
-        console.error("Failed to create note:", errorData);
+        console.error("Failed to create event:", errorData);
       }
     } catch (err) {
       console.error("Error submitting form:", err);
@@ -197,10 +197,10 @@ export default function NotesClient({ user }: { user: User }) {
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!confirm("Are you sure you want to delete this note?")) {
+    if (!confirm("Are you sure you want to delete this event?")) {
       return;
     }
-    const toastId = toast.loading("Deleting note...");
+    const toastId = toast.loading("Deleting event...");
 
     try {
       const res = await fetch(`/api/notes?id=${noteId}`, {
@@ -214,14 +214,14 @@ export default function NotesClient({ user }: { user: User }) {
       } else {
         const errorData = await res.json();
         toast.error(
-          `Failed to delete note: ${errorData.message || res.statusText}`,
+          `Failed to delete event: ${errorData.message || res.statusText}`,
           { id: toastId }
         );
-        console.error("Failed to delete note:", errorData);
+        console.error("Failed to delete event:", errorData);
       }
     } catch (err) {
-      console.error("Error deleting note:", err);
-      toast.error("Error deleting note. Check console for details.", {
+      console.error("Error deleting event:", err);
+      toast.error("Error deleting event. Check console for details.", {
         id: toastId,
       });
     }
@@ -229,7 +229,7 @@ export default function NotesClient({ user }: { user: User }) {
 
   const handleToggleShare = async (note: Note, checked: boolean) => {
     if (!note.id || !currentSpaceId || !partnerId || !currentUserId) {
-      toast.error("Missing note, space, or partner ID!");
+      toast.error("Missing event, space, or partner ID!");
       console.error("Missing IDs", { noteId: note.id, currentSpaceId, partnerId, currentUserId });
       return;
     }
@@ -240,32 +240,32 @@ export default function NotesClient({ user }: { user: User }) {
       if (!confirm(`Are you sure you want to share "${note.title}" with your partner?`)) {
         return;
       }
-      toastId = toast.loading("Sharing note...");
+      toastId = toast.loading("Sharing event...");
       try {
         const payload = {
           noteId: note.id,
           activeSpaceId: currentSpaceId,
           partnerId: partnerId,
         };
-        console.log("Sharing note with payload:", payload);
+        console.log("Sharing event with payload:", payload);
         const res = await fetch("/api/shared-notes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        console.log("Share note response:", data);
+        console.log("Share event response:", data);
 
         if (res.ok) {
-          toast.success("Note shared successfully!", { id: toastId });
+          toast.success("Event shared successfully!", { id: toastId });
           fetchNotes();
         } else {
-          toast.error(`Failed to share note: ${data.error || res.statusText}`, { id: toastId });
+          toast.error(`Failed to share event: ${data.error || res.statusText}`, { id: toastId });
           fetchNotes();
         }
       } catch (err) {
-        console.error("Error sharing note:", err);
-        toast.error("Error sharing note. Check console for details.", { id: toastId });
+        console.error("Error sharing event:", err);
+        toast.error("Error sharing event. Check console for details.", { id: toastId });
         fetchNotes();
       }
     } else {
@@ -277,7 +277,7 @@ export default function NotesClient({ user }: { user: User }) {
       ) {
         return;
       }
-      toastId = toast.loading("Unsharing note...");
+      toastId = toast.loading("Unsharing event...");
       try {
         const res = await fetch(
           `/api/shared-notes?fromUserId=${currentUserId}&toUserId=${partnerId}&spaceId=${currentSpaceId}&title=${encodeURIComponent(
@@ -290,20 +290,20 @@ export default function NotesClient({ user }: { user: User }) {
         );
 
         if (res.ok) {
-          toast.success("Note unshared successfully!", { id: toastId });
+          toast.success("Event unshared successfully!", { id: toastId });
           fetchNotes(); // Re-fetch all notes to update shared status
         } else {
           const errorData = await res.json();
           toast.error(
-            `Failed to unshare note: ${errorData.message || res.statusText}`,
+            `Failed to unshare event: ${errorData.message || res.statusText}`,
             { id: toastId }
           );
-          console.error("Failed to unshare note:", errorData);
+          console.error("Failed to unshare event:", errorData);
           fetchNotes();
         }
       } catch (err) {
-        console.error("Error unsharing note:", err);
-        toast.error("Error unsharing note. Check console for details.", {
+        console.error("Error unsharing event:", err);
+        toast.error("Error unsharing event. Check console for details.", {
           id: toastId,
         });
         fetchNotes();
@@ -343,8 +343,8 @@ export default function NotesClient({ user }: { user: User }) {
       setAllNotes(notesWithSharedStatus);
     } catch (error) {
       setAllNotes([]);
-      toast.error('Failed to fetch notes.');
-      console.error('Failed to fetch notes:', error);
+      toast.error('Failed to fetch events.');
+      console.error('Failed to fetch events:', error);
     } finally {
       setLoading(false);
     }
@@ -401,7 +401,7 @@ export default function NotesClient({ user }: { user: User }) {
           }
         });
       } catch (error) {
-        console.error("Error parsing date or filtering notes:", error);
+        console.error("Error parsing date or filtering events:", error);
         return [];
       }
     },
@@ -437,7 +437,7 @@ export default function NotesClient({ user }: { user: User }) {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Notes</BreadcrumbPage>
+                <BreadcrumbPage>Events</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -574,10 +574,10 @@ export default function NotesClient({ user }: { user: User }) {
                 </div>
                 <div className="space-y-2 mt-4">
                   {loading ? (
-                    <p>Loading notes...</p>
+                    <p>Loading events...</p>
                   ) : displayedNotes.length === 0 ? (
                     <p className="text-muted-foreground">
-                      No notes for this date. Create one!
+                      No events for this date. Create one!
                     </p>
                   ) : (
                     displayedNotes.map((note) => (
@@ -620,13 +620,13 @@ export default function NotesClient({ user }: { user: User }) {
                             {partnerId && currentSpaceId && (
                               <div className="flex items-center gap-2">
                                 <Label
-                                  htmlFor={`share-note-${note.id}`}
+                                  htmlFor={`share-event-${note.id}`}
                                   className="text-sm"
                                 >
                                   {note.is_shared ? "Shared" : "Share"}
                                 </Label>
                                 <Switch
-                                  id={`share-note-${note.id}`}
+                                  id={`share-event-${note.id}`}
                                   checked={!!note.is_shared}
                                   onCheckedChange={(checked) =>
                                     handleToggleShare(note, checked)

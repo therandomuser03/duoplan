@@ -104,7 +104,7 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
             <CardHeader>
               <CardTitle>My Events</CardTitle>
               <CardDescription className="text-muted-foreground">
-                All your personal notes and tasks.
+                All your personal events and tasks.
               </CardDescription>
             </CardHeader>
             <CardContent className="h-full flex flex-col overflow-hidden">

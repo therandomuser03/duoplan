@@ -75,10 +75,10 @@ export default function SharedNotesClient({ user }: { user: User }) {
       const incoming = await incomingRes.json();
       const outgoing = await outgoingRes.json();
       if (incoming.error) {
-        throw new Error(`Incoming notes error: ${incoming.error}`);
+        throw new Error(`Incoming events error: ${incoming.error}`);
       }
       if (outgoing.error) {
-        throw new Error(`Outgoing notes error: ${outgoing.error}`);
+        throw new Error(`Outgoing events error: ${outgoing.error}`);
       }
       setIncomingNotes(
         Array.isArray(incoming)
@@ -99,9 +99,9 @@ export default function SharedNotesClient({ user }: { user: User }) {
           : []
       );
     } catch (error) {
-      console.error("Failed to fetch shared notes", error);
+      console.error("Failed to fetch shared events", error);
       setError(
-        error instanceof Error ? error.message : "Failed to fetch shared notes"
+        error instanceof Error ? error.message : "Failed to fetch shared events"
       );
       setIncomingNotes([]);
       setOutgoingNotes([]);
@@ -143,7 +143,7 @@ export default function SharedNotesClient({ user }: { user: User }) {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Shared Notes</BreadcrumbPage>
+                <BreadcrumbPage>Shared Events</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -261,10 +261,10 @@ export default function SharedNotesClient({ user }: { user: User }) {
               ) : outgoingNotes.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-sm text-muted-foreground">
-                    You haven&apos;t shared any notes yet.
+                    You haven&apos;t shared any events yet.
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Share notes from your Notes page to see them here.
+                    Share events from your Events page to see them here.
                   </p>
                 </div>
               ) : (

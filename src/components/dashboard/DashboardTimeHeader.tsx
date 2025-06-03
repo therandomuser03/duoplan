@@ -34,9 +34,9 @@ export default function DashboardTimeHeader({ onRefresh, isLoading }: DashboardT
       if (onRefresh) {
         onRefresh();
       }
-      toast.success("Refreshing notes...");
+      toast.success("Refreshing events...");
     } catch (error) {
-      toast.error("Failed to refresh notes");
+      toast.error("Failed to refresh events");
       console.error("Refresh error:", error);
     } finally {
       // Keep the refreshing state for a bit to show the animation

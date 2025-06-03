@@ -117,7 +117,7 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
     setLoading(true);
     setError(null);
     try {
-      console.log("🔍 Fetching incoming notes...", { currentSpaceId });
+      console.log("🔍 Fetching incoming events...", { currentSpaceId });
       if (!currentSpaceId) {
         console.log("❌ No currentSpaceId available");
         setAllIncomingNotes([]);
@@ -130,11 +130,11 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
       );
       
       if (!res.ok) {
-        throw new Error("Failed to fetch shared notes");
+        throw new Error("Failed to fetch shared events");
       }
 
       const sharedNotes = await res.json();
-      console.log("✅ Shared notes:", sharedNotes);
+      console.log("✅ Shared events:", sharedNotes);
 
       const now = Date.now();
       const sorted = sharedNotes.sort((a: SharedNote, b: SharedNote) => {
@@ -150,7 +150,7 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
         })
         .map((note: SharedNote) => note.id);
 
-      console.log("✅ Setting notes:", sorted);
+      console.log("✅ Setting events:", sorted);
       setAllIncomingNotes(sorted);
       setNewNoteIds(new Set(newIds));
       setTimeout(() => {
@@ -158,11 +158,11 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
       }, 5 * 60 * 1000);
 
     } catch (error) {
-      console.error("❌ Failed to fetch incoming shared notes:", error);
+      console.error("❌ Failed to fetch incoming shared events:", error);
       setError(
         error instanceof Error
           ? error.message
-          : "Failed to fetch incoming shared notes"
+          : "Failed to fetch incoming shared events"
       );
       setAllIncomingNotes([]);
     } finally {
@@ -194,10 +194,10 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
         ) : filteredNotes.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-sm text-muted-foreground">
-              No notes found for this date.
+              No events found for this date.
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Notes shared by your partner for the selected date will appear here.
+              Events shared by your partner for the selected date will appear here.
             </p>
           </div>
         ) : (

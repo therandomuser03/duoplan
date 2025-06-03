@@ -30,8 +30,8 @@ const quickLinks = [
   },
   {
     icon: <div className="bg-green-100 text-green-600 p-3 rounded-full"><FileText className="h-5 w-5" /></div>,
-    title: "Managing Notes",
-    description: "Create, organize, and share notes with your team for a better collaboration."
+    title: "Managing Events",
+    description: "Create, organize, and share events with your team for a better collaboration."
   },
   {
     icon: <div className="bg-purple-100 text-purple-600 p-3 rounded-full"><Users className="h-5 w-5" /></div>,
@@ -44,7 +44,7 @@ const quickLinks = [
 const gettingStartedFAQs = [
   {
     question: "What is DuoPlan?",
-    answer: "DuoPlan is a comprehensive productivity tool that combines calendar management, note-taking, and team collaboration features in one platform. It helps individuals and teams organize their schedules, share plans, and keep track of important information."
+    answer: "DuoPlan is a comprehensive productivity tool that combines calendar management, event-taking, and team collaboration features in one platform. It helps individuals and teams organize their schedules, share plans, and keep track of important information."
   },
   {
     question: "How do I create an account?",
@@ -52,18 +52,18 @@ const gettingStartedFAQs = [
   },
   {
     question: "Is there a mobile app available?",
-    answer: "Yes, DuoPlan is available as a mobile app for both iOS and Android devices. You can download it from the App Store or Google Play Store to access your schedule and notes on the go."
+    answer: "Yes, DuoPlan is available as a mobile app for both iOS and Android devices. You can download it from the App Store or Google Play Store to access your schedule and events on the go."
   },
   {
     question: "How do I navigate the dashboard?",
-    answer: "The dashboard provides an overview of your upcoming events, shared plans, and recent notes. Use the sidebar to access different sections of the app, including Calendar, Notes, and Shared Plans. The top section shows your today&apos;s schedule for quick reference."
+    answer: "The dashboard provides an overview of your upcoming events, shared plans, and recent events. Use the sidebar to access different sections of the app, including Calendar, Events, and Shared Plans. The top section shows your today&apos;s schedule for quick reference."
   }
 ];
 
 const calendarFAQs = [
   {
     question: "How do I create a new event?",
-    answer: "To create a new event, click the '+' button in the header or directly on the calendar at your desired time slot. Fill in the event details including title, time, location, and any notes. You can also set reminders and invite others to the event."
+    answer: "To create a new event, click the '+' button in the header or directly on the calendar at your desired time slot. Fill in the event details including title, time, location, and any events. You can also set reminders and invite others to the event."
   },
   {
     question: "Can I set recurring events?",
@@ -79,29 +79,29 @@ const calendarFAQs = [
   }
 ];
 
-const notesFAQs = [
+const eventsFAQs = [
   {
-    question: "How do I create a new note?",
-    answer: "To create a new note, navigate to the Notes section from the sidebar and click the '+' button. You can start typing right away. Notes automatically save as you type, and you can add titles, formatting, and attachments as needed."
+    question: "How do I create a new event?",
+    answer: "To create a new event, navigate to the Events section from the sidebar and click the '+' button. You can start typing right away. Events automatically save as you type, and you can add titles, formatting, and attachments as needed."
   },
   {
-    question: "Can I organize my notes into folders?",
-    answer: "Yes, you can create folders to organize your notes. In the Notes section, click 'New Folder' to create a category. Drag and drop notes into folders, or select 'Move to' from the note&apos;s menu to change its location."
+    question: "Can I organize my events into folders?",
+    answer: "Yes, you can create folders to organize your events. In the Events section, click 'New Folder' to create a category. Drag and drop events into folders, or select 'Move to' from the event&apos;s menu to change its location."
   },
   {
-    question: "How do I share notes with team members?",
-    answer: "To share a note, open it and click the 'Share' button in the top-right corner. Enter the email addresses of people you want to share with and set their access levels (view only or edit). Recipients will receive an email notification with access to the shared note."
+    question: "How do I share events with team members?",
+    answer: "To share a event, open it and click the 'Share' button in the top-right corner. Enter the email addresses of people you want to share with and set their access levels (view only or edit). Recipients will receive an email notification with access to the shared event."
   },
   {
-    question: "Can I attach files to my notes?",
-    answer: "Yes, you can attach files to notes by clicking the attachment icon in the note editor toolbar. You can upload files from your device or link documents from cloud services like Google Drive, Dropbox, or OneDrive."
+    question: "Can I attach files to my events?",
+    answer: "Yes, you can attach files to events by clicking the attachment icon in the event editor toolbar. You can upload files from your device or link documents from cloud services like Google Drive, Dropbox, or OneDrive."
   }
 ];
 
 const sharedPlansFAQs = [
   {
     question: "What are Shared Plans?",
-    answer: "Shared Plans are collaborative project spaces where team members can coordinate activities, assign tasks, and track progress together. They combine calendar events, notes, and task lists in a unified view accessible to all team members."
+    answer: "Shared Plans are collaborative project spaces where team members can coordinate activities, assign tasks, and track progress together. They combine calendar events, events, and task lists in a unified view accessible to all team members."
   },
   {
     question: "How do I create a new Shared Plan?",
@@ -128,11 +128,11 @@ const accountFAQs = [
   },
   {
     question: "What notification settings are available?",
-    answer: "Go to Profile Settings > Notifications to customize how and when you receive alerts. You can enable or disable notifications for events, notes updates, shared plan activities, and system announcements. You can receive notifications via email, browser, and mobile push notifications."
+    answer: "Go to Profile Settings > Notifications to customize how and when you receive alerts. You can enable or disable notifications for events, events updates, shared plan activities, and system announcements. You can receive notifications via email, browser, and mobile push notifications."
   },
   {
     question: "How do I delete my account?",
-    answer: "To delete your account, go to Profile Settings > Account and select 'Delete Account' at the bottom of the page. You&apos;ll need to confirm this action by entering your password. Note that account deletion is permanent and all your data will be removed from our servers."
+    answer: "To delete your account, go to Profile Settings > Account and select 'Delete Account' at the bottom of the page. You&apos;ll need to confirm this action by entering your password. Event that account deletion is permanent and all your data will be removed from our servers."
   }
 ];
 
@@ -202,7 +202,7 @@ export default async function Support() {
                 <TabsList className="grid grid-cols-5 gap-4">
                   <TabsTrigger value="getting-started" className="text-sm">Getting Started</TabsTrigger>
                   <TabsTrigger value="calendar" className="text-sm">Calendar</TabsTrigger>
-                  <TabsTrigger value="notes" className="text-sm">Notes</TabsTrigger>
+                  <TabsTrigger value="events" className="text-sm">Events</TabsTrigger>
                   <TabsTrigger value="plans" className="text-sm">Shared Plans</TabsTrigger>
                   <TabsTrigger value="account" className="text-sm">Account</TabsTrigger>
                 </TabsList>
@@ -230,9 +230,9 @@ export default async function Support() {
                 </Accordion>
               </TabsContent>
 
-              <TabsContent value="notes" className="p-6">
+              <TabsContent value="events" className="p-6">
                 <Accordion type="single" collapsible className="w-full">
-                  {notesFAQs.map((faq, index) => (
+                  {eventsFAQs.map((faq, index) => (
                     <AccordionItem key={index} value={`item-${index}`} className="border-b">
                       <AccordionTrigger className="py-4 text-base font-medium hover:bg-muted/30 px-2 rounded">{faq.question}</AccordionTrigger>
                       <AccordionContent className="px-2 pb-4 text-muted-foreground">{faq.answer}</AccordionContent>

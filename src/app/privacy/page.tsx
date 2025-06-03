@@ -9,7 +9,7 @@ export default function PrivacyPage() {
       <h2>1. Information We Collect</h2>
       <ul>
         <li><strong>Account Info:</strong> Email address and basic authentication data via Supabase Auth.</li>
-        <li><strong>Usage Data:</strong> Actions taken within the planner (e.g., events, notes).</li>
+        <li><strong>Usage Data:</strong> Actions taken within the planner (e.g., events, tasks).</li>
         <li><strong>Device Data:</strong> Browser type, IP address, and cookies (if analytics tools are used).</li>
       </ul>
 

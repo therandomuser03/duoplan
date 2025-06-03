@@ -139,8 +139,8 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
       setAllNotes(notesWithSharedStatus);
     } catch (error) {
       setAllNotes([]);
-      toast.error('Failed to fetch notes.');
-      console.error('Failed to fetch notes:', error);
+      toast.error('Failed to fetch events.');
+      console.error('Failed to fetch events:', error);
     } finally {
       setLoading(false);
     }
@@ -183,7 +183,7 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
         }
         });
     } catch (error) {
-        console.error("Error parsing date or filtering notes:", error);
+        console.error("Error parsing date or filtering events:", error);
         return []; // Return empty array on error
     }
   }, []);
@@ -205,10 +205,10 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
 
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!confirm("Are you sure you want to delete this note?")) {
+    if (!confirm("Are you sure you want to delete this event?")) {
       return;
     }
-    const toastId = toast.loading("Deleting note...");
+    const toastId = toast.loading("Deleting event...");
 
     try {
       const res = await fetch(`/api/notes?id=${noteId}`, {
@@ -217,20 +217,20 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
       });
 
       if (res.ok) {
-        toast.success("Note deleted successfully!", { id: toastId });
+        toast.success("Event deleted successfully!", { id: toastId });
         // Refetch all notes to update the list, which will then be re-filtered
         fetchNotes();
       } else {
         const errorData = await res.json();
         toast.error(
-          `Failed to delete note: ${errorData.message || res.statusText}`,
+          `Failed to delete event: ${errorData.message || res.statusText}`,
           { id: toastId }
         );
-        console.error("Failed to delete note:", errorData);
+        console.error("Failed to delete event:", errorData);
       }
     } catch (err) {
-      console.error("Error deleting note:", err);
-      toast.error("Error deleting note. Check console for details.", {
+      console.error("Error deleting event:", err);
+      toast.error("Error deleting event. Check console for details.", {
         id: toastId,
       });
     }
@@ -247,9 +247,9 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
           </div>
         ) : displayedNotes.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">No notes found for this date.</p>
+            <p className="text-sm text-muted-foreground">No events found for this date.</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Create a new note or select a different date.
+              Create a new event or select a different date.
             </p>
           </div>
         ) : (
