@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import {
   Breadcrumb,
@@ -53,7 +53,7 @@ export default function SharedNotesClient({ user }: { user: User }) {
   const [error, setError] = useState<string | null>(null);
   const [time, setTime] = useState(new Date());
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -108,13 +108,13 @@ export default function SharedNotesClient({ user }: { user: User }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentSpaceId]);
 
   useEffect(() => {
     fetchNotes();
     const interval = setInterval(() => setTime(new Date()), 5000);
     return () => clearInterval(interval);
-  }, [currentSpaceId]);
+  }, [fetchNotes]);
 
   const formattedDate = format(time, "PPPP");
   const formattedTime = format(time, "p");
@@ -130,9 +130,7 @@ export default function SharedNotesClient({ user }: { user: User }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} selectedDate={""} onDateSelect={function (date: string): void {
-        throw new Error("Function not implemented.");
-      } } />
+      <AppSidebar user={user} selectedDate={""} onDateSelect={() => {}} />
       <SidebarInset>
         {/* HEADER */}
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">

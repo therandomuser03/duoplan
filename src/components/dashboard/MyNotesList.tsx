@@ -44,7 +44,7 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
   const [displayedNotes, setDisplayedNotes] = useState<Note[]>([]); // Stores notes filtered by selectedDate
   const [loading, setLoading] = useState(true);
 
-  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [, setPartnerId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const formatDateTime = (dateString?: string) => {

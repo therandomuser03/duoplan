@@ -31,9 +31,10 @@ interface DashboardContentProps {
 export default function DashboardContent({ user, selectedDate, onDateChange }: DashboardContentProps) {
   const { currentSpaceId } = useSpace();
   const [partnerFirstName, setPartnerFirstName] = useState<string>("Partner");
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [, setIsRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleRefresh = () => {
     setIsRefreshing(true);
     setRefreshKey(prev => prev + 1);

@@ -10,7 +10,6 @@ import { format, isSameDay, parseISO, isWithinInterval, startOfDay, endOfDay } f
 import { Badge } from "../ui/badge";
 import { CalendarCheck2, CalendarDays, PencilLine } from "lucide-react";
 import { useSpace } from '@/contexts/SpaceContext';
-import { createClient } from "@/utils/supabase/client";
 
 interface User {
   name: string;

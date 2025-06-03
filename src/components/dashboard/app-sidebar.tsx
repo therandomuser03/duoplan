@@ -42,6 +42,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onDateSelect: (date: string) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSidebarProps) {
   const supabase = createClient();
   const [userId, setUserId] = React.useState<string | null>(null);

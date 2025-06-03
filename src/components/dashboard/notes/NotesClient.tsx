@@ -81,7 +81,7 @@ export default function NotesClient({ user }: { user: User }) {
   const [allNotes, setAllNotes] = useState<Note[]>([]);
   const [displayedNotes, setDisplayedNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Added error state
+  const [error] = useState<string | null>(null); // Added error state
   const [time, setTime] = useState(new Date()); // Added time state for header
 
   const [partnerId, setPartnerId] = useState<string | null>(null);
@@ -424,9 +424,7 @@ export default function NotesClient({ user }: { user: User }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} selectedDate={""} onDateSelect={function (date: string): void {
-        throw new Error("Function not implemented.");
-      } } />
+      <AppSidebar user={user} selectedDate={""} onDateSelect={() => {}} />
       <SidebarInset>
         {/* HEADER */}
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">

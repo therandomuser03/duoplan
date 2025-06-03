@@ -16,8 +16,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { getCurrentUser } from "@/utils/user";
-import { redirect } from "next/navigation";
 
 export default function DashboardPageWrapper() {
   const [selectedDate, setSelectedDate] = useState(
@@ -40,9 +38,7 @@ export default function DashboardPageWrapper() {
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} selectedDate={""} onDateSelect={function (date: string): void {
-        throw new Error("Function not implemented.");
-      } } />
+      <AppSidebar user={user} selectedDate={""} onDateSelect={() => {}} />
       <SidebarInset className="flex flex-col h-screen overflow-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">

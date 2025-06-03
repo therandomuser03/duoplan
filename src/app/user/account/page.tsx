@@ -2,7 +2,7 @@
 'use client' // Add this directive to make it a client component
 
 import { useState, useEffect } from 'react';
-import { useRouter, redirect } from 'next/navigation'; // Import useRouter from next/navigation
+import { useRouter } from 'next/navigation'; // Import useRouter from next/navigation
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import {
   Breadcrumb,
@@ -33,13 +33,31 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils"; // If not already imported for cn utility
+import Image from 'next/image';
 
+interface SupabaseUser {
+  id: string;
+  email?: string;
+  user_metadata: {
+    avatar_url?: string;
+    given_name?: string;
+    family_name?: string;
+  };
+  avatar?: string | null;
+}
+
+interface UserProfile {
+  id: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+}
 
 export default function Account() { // Changed to client component, removed 'async'
   const router = useRouter();
-  const [user, setUser] = useState<any>(null); // State to store the Supabase user object
-  const [userProfile, setUserProfile] = useState<any>(null); // State to hold user profile data from 'users' table
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,17 +91,6 @@ export default function Account() { // Changed to client component, removed 'asy
     fetchUserData();
   }, [router]); // Depend on router to ensure effect runs if router changes (though unlikely for a fixed page)
 
-  // Provide a default user object for AppSidebar when loading.
-  // This ensures 'user' prop is never null, preventing "Cannot read properties of null" errors.
-  // It includes common properties like 'id', 'email', and 'user_metadata' with 'avatar_url',
-  // as well as a top-level 'avatar' which the error message specifically mentioned.
-  const sidebarUser = user || {
-    id: 'loading',
-    email: 'loading@example.com',
-    avatar: null, // Added to directly address 'reading 'avatar'' error if it's a top-level property
-    user_metadata: { avatar_url: null, given_name: null, family_name: null }, // Ensure user_metadata is an object with default properties
-  };
-
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -96,12 +103,14 @@ export default function Account() { // Changed to client component, removed 'asy
       toast.success(result.message);
       // Optionally, refresh user profile data after successful update (already there, keep it)
       const supabase = createClient();
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      if (!profileError) setUserProfile(profile);
+      if (user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        if (!profileError) setUserProfile(profile);
+      }
 
       // --- ADDED REDIRECTION HERE ---
       router.push('/dashboard'); // Redirect to the dashboard
@@ -117,7 +126,15 @@ export default function Account() { // Changed to client component, removed 'asy
     return (
       <SidebarProvider>
         {/* Pass the default user object to AppSidebar during loading */}
-        <AppSidebar user={sidebarUser} />
+        <AppSidebar 
+          user={{
+            name: user?.user_metadata?.given_name || user?.email?.split('@')[0] || 'User',
+            email: user?.email || '',
+            avatar: user?.user_metadata?.avatar_url || ''
+          }} 
+          selectedDate={""} 
+          onDateSelect={() => {}} 
+        />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2">
             <div className="flex items-center gap-2 px-4">
@@ -148,7 +165,15 @@ export default function Account() { // Changed to client component, removed 'asy
   return (
     <SidebarProvider>
       {/* Pass the actual user object (or the default if still loading) to AppSidebar */}
-      <AppSidebar user={sidebarUser} />
+      <AppSidebar 
+        user={{
+          name: user.user_metadata?.given_name || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          avatar: user.user_metadata?.avatar_url || ''
+        }} 
+        selectedDate={""} 
+        onDateSelect={() => {}} 
+      />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
@@ -218,11 +243,13 @@ export default function Account() { // Changed to client component, removed 'asy
                     />
                     {userProfile?.avatar_url && (
                       <div className="mt-2 text-center">
-                        <img
-                          src={userProfile.avatar_url}
-                          alt="Current Avatar"
-                          className="h-16 w-16 rounded-full object-cover mx-auto"
-                        />
+                        <Image
+  src={userProfile.avatar_url}
+  alt="Current Avatar"
+  width={64}
+  height={64}
+  className="rounded-full object-cover mx-auto"
+/>
                         <p className="text-sm text-muted-foreground">Current Avatar</p>
                       </div>
                     )}
