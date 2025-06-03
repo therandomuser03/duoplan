@@ -472,7 +472,7 @@ export default function NotesClient({ user }: { user: User }) {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Card className="p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
-                <h2 className="text-lg font-semibold">Create a Note</h2>
+                <h2 className="text-lg font-semibold">Create an Event</h2>
                 <div>
                   <Label htmlFor="title">Title</Label>
                   <Input
@@ -563,7 +563,7 @@ export default function NotesClient({ user }: { user: User }) {
 
             <Card className="p-6">
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold">Your Notes</h2>
+                <h2 className="text-lg font-semibold">Your Events</h2>
                 <div>
                   <Label htmlFor="date">Select Date</Label>
                   <Input

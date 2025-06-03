@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/utils/user";
 import { redirect } from "next/navigation";
-import NotesClient from "@/components/dashboard/notes/NotesClient";
+import NotesClient from "@/components/dashboard/events/NotesClient";
 
 export default async function NotesPage() {
   const user = await getCurrentUser();

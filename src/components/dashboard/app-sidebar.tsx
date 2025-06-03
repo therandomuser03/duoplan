@@ -23,8 +23,8 @@ import { createClient } from "@/utils/supabase/client";
 
 const staticData = {
   navMain: [
-    { title: "Notes", url: "/notes", icon: BookText },
-    { title: "Shared Notes", url: "/shared-notes", icon: Link },
+    { title: "Events", url: "/notes", icon: BookText },
+    { title: "Shared Events", url: "/shared-notes", icon: Link },
   ],
   navSecondary: [
     { title: "Support", url: "/support", icon: LifeBuoy },

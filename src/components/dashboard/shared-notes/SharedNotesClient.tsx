@@ -181,7 +181,7 @@ export default function SharedNotesClient({ user }: { user: User }) {
             {/* LEFT COLUMN - NOTES SHARED WITH ME */}
             <div className="border border-gray-300 rounded-lg p-4">
               <h2 className="text-lg font-semibold mb-2">
-  Notes Shared By{" "}
+  Events Shared By{" "}
   {incomingNotes.length > 0
     ? (() => {
         const name =
@@ -252,7 +252,7 @@ export default function SharedNotesClient({ user }: { user: User }) {
 
             {/* RIGHT COLUMN - NOTES I SHARED */}
             <div className="border border-gray-300 rounded-lg p-4">
-              <h2 className="text-lg font-semibold mb-2">My Notes</h2>
+              <h2 className="text-lg font-semibold mb-2">My Events</h2>
               {loading ? (
                 <div className="space-y-3">
                   <Skeleton className="h-24 w-full rounded-xl" />
