@@ -8,7 +8,8 @@ CREATE TABLE
         username TEXT UNIQUE,
         first_name TEXT,
         last_name TEXT,
-        created_at TIMESTAMPTZ DEFAULT NOW ()
+        created_at TIMESTAMPTZ DEFAULT NOW (),
+        avatar_url TEXT
     );
 
 -- Enable RLS
@@ -23,6 +24,7 @@ CREATE TABLE
         user_a_id UUID REFERENCES users (id) ON DELETE CASCADE,
         user_b_id UUID REFERENCES users (id) ON DELETE CASCADE,
         created_at TIMESTAMPTZ DEFAULT NOW (),
+        name TEXT,
         UNIQUE (user_a_id, user_b_id)
     );
 
@@ -42,7 +44,8 @@ CREATE TABLE
         start_time TIMESTAMPTZ,
         end_time TIMESTAMPTZ,
         color TEXT DEFAULT 'gray',
-        created_at TIMESTAMPTZ DEFAULT NOW ()
+        created_at TIMESTAMPTZ DEFAULT NOW (),
+        space_id UUID REFERENCES spaces (id)
     );
 
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
@@ -55,6 +58,7 @@ CREATE TABLE
         from_user_id UUID REFERENCES users (id),
         to_user_id UUID REFERENCES users (id),
         space_id UUID REFERENCES spaces (id),
+        original_note_id UUID REFERENCES notes (id),
         title TEXT NOT NULL,
         content TEXT,
         start_time TIMESTAMPTZ,
