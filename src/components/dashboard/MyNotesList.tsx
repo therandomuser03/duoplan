@@ -9,6 +9,7 @@ import { CalendarCheck2, PencilLine, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO, isSameDay, isWithinInterval, startOfDay, endOfDay } from "date-fns"; // Added date-fns imports
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSpace } from '@/contexts/SpaceContext';
 
 interface User {
   name: string;
@@ -19,6 +20,7 @@ interface User {
 interface Note {
   id: string;
   title: string;
+  space_id: string | null;
   content: string;
   start_time?: string;
   end_time?: string;
@@ -36,12 +38,12 @@ interface MyNotesListProps {
 
 export default function MyNotesList({ selectedDate }: MyNotesListProps) {
   const supabase = createClient();
+  const { currentSpaceId } = useSpace();
 
   const [allNotes, setAllNotes] = useState<Note[]>([]); // Stores all fetched notes
   const [displayedNotes, setDisplayedNotes] = useState<Note[]>([]); // Stores notes filtered by selectedDate
   const [loading, setLoading] = useState(true);
 
-  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -91,15 +93,13 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
 
       if (spaces && spaces.length > 0) {
         const activeSpace = spaces[0];
-        setActiveSpaceId(activeSpace.id);
-        const determinedPartnerId =
+        setPartnerId(
           activeSpace.user_a_id === currentUser.id
             ? activeSpace.user_b_id
-            : activeSpace.user_a_id;
-        setPartnerId(determinedPartnerId);
+            : activeSpace.user_a_id
+        );
       } else {
         // No active space, but we can still fetch user's own notes
-        setActiveSpaceId(null);
         setPartnerId(null);
       }
     };
@@ -108,51 +108,40 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
   }, [supabase]);
 
   const fetchNotes = useCallback(async () => {
-    if (!currentUserId) return; // Don't fetch if currentUserId is not set
-
+    if (!currentUserId || !currentSpaceId) return;
     setLoading(true);
-    // Modify queryParams: Remove 'date' if your API supports fetching all notes for the user.
-    // If your API *requires* a date or some other parameters for fetching user's notes,
-    // you might need to adjust this. For this example, we assume an endpoint
-    // that returns all user notes, possibly filtered by space/partner if relevant.
-    const queryParams = new URLSearchParams();
-    if (partnerId && activeSpaceId) { // These might still be relevant for context
-      queryParams.append("partnerId", partnerId);
-      queryParams.append("activeSpaceId", activeSpaceId);
-    }
-    // If your API requires userId, ensure it's implicitly handled by auth or add it.
-    // For example: queryParams.append("userId", currentUserId);
-
     try {
-      // Assuming `/api/notes` without a `date` param fetches all notes for the user
-      // or notes relevant to their context (e.g., based on activeSpaceId).
-      // If your API needs changes to support this, that will be a backend task.
-      const res = await fetch(`/api/notes?${queryParams.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAllNotes(Array.isArray(data) ? data : []);
-      } else {
-        setAllNotes([]);
-        toast.error("Failed to fetch notes.");
-        console.error("Failed to fetch notes:", await res.text());
-      }
+      // Fetch personal notes for this space
+      const { data: notes, error: notesError } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .eq('space_id', currentSpaceId);
+      if (notesError) throw notesError;
+
+      // Fetch shared notes for this space
+      const { data: sharedNotes, error: sharedNotesError } = await supabase
+        .from('shared_notes')
+        .select('*')
+        .eq('space_id', currentSpaceId)
+        .or(`from_user_id.eq.${currentUserId},to_user_id.eq.${currentUserId}`);
+      if (sharedNotesError) throw sharedNotesError;
+
+      setAllNotes([...(notes || []), ...(sharedNotes || [])]);
     } catch (error) {
-      console.error("Error fetching notes:", error);
       setAllNotes([]);
-      toast.error("An error occurred while fetching notes.");
+      toast.error('Failed to fetch notes.');
+      console.error('Failed to fetch notes:', error);
     } finally {
       setLoading(false);
     }
-  }, [currentUserId, partnerId, activeSpaceId, supabase]); // Removed selectedDate from dependencies
+  }, [currentUserId, currentSpaceId, supabase]);
 
   useEffect(() => {
-    // Fetch notes when currentUserId is known, and also if partnerId/activeSpaceId change
-    // as they might affect the context of notes fetched.
-    if (currentUserId) {
+    if (currentUserId && currentSpaceId) {
       fetchNotes();
     }
-  }, [fetchNotes, currentUserId]);
-
+  }, [fetchNotes, currentUserId, currentSpaceId]);
 
   const filterNotesByDate = useCallback((notesToFilter: Note[], dateString: string): Note[] => {
     if (!dateString) return notesToFilter; // Or return empty array: return [];

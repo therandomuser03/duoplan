@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { useSpace } from '@/contexts/SpaceContext';
 
 interface User {
   name: string;
@@ -45,6 +46,7 @@ interface SharedNote {
 }
 
 export default function SharedNotesClient({ user }: { user: User }) {
+  const { currentSpaceId } = useSpace();
   const [incomingNotes, setIncomingNotes] = useState<SharedNote[]>([]);
   const [outgoingNotes, setOutgoingNotes] = useState<SharedNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,28 +57,29 @@ export default function SharedNotesClient({ user }: { user: User }) {
     setLoading(true);
     setError(null);
     try {
+      if (!currentSpaceId) {
+        setIncomingNotes([]);
+        setOutgoingNotes([]);
+        setLoading(false);
+        return;
+      }
       const [incomingRes, outgoingRes] = await Promise.all([
-        fetch("/api/shared-notes?direction=incoming"),
-        fetch("/api/shared-notes?direction=outgoing"),
+        fetch(`/api/shared-notes?direction=incoming&space_id=${currentSpaceId}`),
+        fetch(`/api/shared-notes?direction=outgoing&space_id=${currentSpaceId}`),
       ]);
-
       if (!incomingRes.ok || !outgoingRes.ok) {
         throw new Error(
           `HTTP error! Incoming: ${incomingRes.status}, Outgoing: ${outgoingRes.status}`
         );
       }
-
       const incoming = await incomingRes.json();
       const outgoing = await outgoingRes.json();
-
-      // Handle error responses
       if (incoming.error) {
         throw new Error(`Incoming notes error: ${incoming.error}`);
       }
       if (outgoing.error) {
         throw new Error(`Outgoing notes error: ${outgoing.error}`);
       }
-
       setIncomingNotes(
         Array.isArray(incoming)
           ? incoming.sort((a, b) => {
@@ -86,7 +89,6 @@ export default function SharedNotesClient({ user }: { user: User }) {
             })
           : []
       );
-
       setOutgoingNotes(
         Array.isArray(outgoing)
           ? outgoing.sort((a, b) => {
@@ -112,7 +114,7 @@ export default function SharedNotesClient({ user }: { user: User }) {
     fetchNotes();
     const interval = setInterval(() => setTime(new Date()), 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentSpaceId]);
 
   const formattedDate = format(time, "PPPP");
   const formattedTime = format(time, "p");
@@ -179,13 +181,17 @@ export default function SharedNotesClient({ user }: { user: User }) {
             {/* LEFT COLUMN - NOTES SHARED WITH ME */}
             <div className="border border-gray-300 rounded-lg p-4">
               <h2 className="text-lg font-semibold mb-2">
-                Notes Shared By{" "}
-                {incomingNotes.length > 0
-                  ? incomingNotes[0].from_user_name === user.name
-                    ? incomingNotes[0].to_user_name || "Partner"
-                    : incomingNotes[0].from_user_name || "Partner"
-                  : "Partner"}
-              </h2>
+  Notes Shared By{" "}
+  {incomingNotes.length > 0
+    ? (() => {
+        const name =
+          incomingNotes[0].from_user_name === user.name
+            ? incomingNotes[0].to_user_name || "Partner"
+            : incomingNotes[0].from_user_name || "Partner";
+        return name.split(" ")[0]; // Only first name
+      })()
+    : "Partner"}
+</h2>
               {loading ? (
                 <div className="space-y-3">
                   <Skeleton className="h-24 w-full rounded-xl" />

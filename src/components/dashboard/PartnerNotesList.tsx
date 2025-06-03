@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, isSameDay, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { Badge } from "../ui/badge";
 import { CalendarCheck2, CalendarDays, PencilLine } from "lucide-react";
+import { useSpace } from '@/contexts/SpaceContext';
 
 interface User {
   name: string;
@@ -37,6 +38,7 @@ interface PartnerNotesListProps {
 }
 
 export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps) {
+  const { currentSpaceId } = useSpace();
   const [allIncomingNotes, setAllIncomingNotes] = useState<SharedNote[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<SharedNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,38 +117,34 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
     setLoading(true);
     setError(null);
     try {
-      const incomingRes = await fetch("/api/shared-notes?direction=incoming");
-
+      if (!currentSpaceId) {
+        setAllIncomingNotes([]);
+        setLoading(false);
+        return;
+      }
+      const incomingRes = await fetch(`/api/shared-notes?direction=incoming&space_id=${currentSpaceId}`);
       if (!incomingRes.ok) {
         throw new Error(`HTTP error! Incoming: ${incomingRes.status}`);
       }
-
       const incoming = await incomingRes.json();
-
       if (incoming.error) {
         throw new Error(`Incoming notes error: ${incoming.error}`);
       }
-
       if (Array.isArray(incoming)) {
         const now = Date.now();
-
         const sorted = incoming.sort((a, b) => {
           const aTime = new Date(a.start_time || a.created_at || 0).getTime();
           const bTime = new Date(b.start_time || b.created_at || 0).getTime();
           return aTime - bTime;
         });
-
         const newIds = sorted
           .filter((note) => {
             const created = new Date(note.created_at).getTime();
             return now - created < 5 * 60 * 1000; // less than 5 min
           })
           .map((note) => note.id);
-
         setAllIncomingNotes(sorted);
         setNewNoteIds(new Set(newIds));
-
-        // Clear "new" badge after 5 minutes
         setTimeout(() => {
           setNewNoteIds(new Set());
         }, 5 * 60 * 1000);
@@ -164,11 +162,11 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentSpaceId]);
 
   useEffect(() => {
     fetchIncomingNotes();
-  }, [fetchIncomingNotes]);
+  }, [fetchIncomingNotes, currentSpaceId]);
 
   return (
     <div className="flex flex-col gap-4">

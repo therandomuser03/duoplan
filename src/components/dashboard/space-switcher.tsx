@@ -20,6 +20,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { CreateSpaceDialog } from "./CreateSpaceDialog";
+import { useSpace } from '@/contexts/SpaceContext';
 
 type User = {
   id: string;
@@ -48,25 +49,19 @@ export function SpaceSwitcher({
   currentUserId: string;
   onSpaceCreated?: (spaceId: string) => void;
 }) {
+  const { currentSpaceId, setCurrentSpaceId } = useSpace();
   const { isMobile } = useSidebar();
-  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
 
-  // Effect to set the initial active space ID or update it if the current active space is stale
-  useEffect(() => {
-    // If no activeSpaceId is set, or if the current activeSpaceId doesn't exist in the new spaces prop,
-    // default to the first space if available.
-    if (!activeSpaceId && spaces.length > 0) {
-      setActiveSpaceId(spaces[0].id);
-    } else if (activeSpaceId && !spaces.find(space => space.id === activeSpaceId)) {
-      // If the previously active space is no longer in the list (e.g., deleted, though not implemented here),
-      // or if the current active space is not found in the updated spaces list,
-      // reset to the first space or null.
-      setActiveSpaceId(spaces.length > 0 ? spaces[0].id : null);
+  // Set initial space if not set
+  React.useEffect(() => {
+    if (!currentSpaceId && spaces.length > 0) {
+      setCurrentSpaceId(spaces[0].id);
+    } else if (currentSpaceId && !spaces.find(space => space.id === currentSpaceId)) {
+      setCurrentSpaceId(spaces.length > 0 ? spaces[0].id : null);
     }
-  }, [spaces, activeSpaceId]);
+  }, [spaces, currentSpaceId, setCurrentSpaceId]);
 
-  // Derive activeSpace from activeSpaceId and the `spaces` prop
-  const activeSpace = activeSpaceId ? spaces.find(space => space.id === activeSpaceId) : null;
+  const activeSpace = currentSpaceId ? spaces.find(space => space.id === currentSpaceId) : null;
 
   // Helper function to get the other user in a space
   const getOtherUser = (space: Space): User | null => {
@@ -112,8 +107,7 @@ const getDisplayName = (user: User): string => {
   // Handle space creation
   const handleSpaceCreated = (spaceId: string) => {
     onSpaceCreated?.(spaceId);
-    // Optionally set the newly created space as active
-    setActiveSpaceId(spaceId);
+    setCurrentSpaceId(spaceId);
   };
 
   // If no spaces, show create space option
@@ -212,7 +206,7 @@ const getDisplayName = (user: User): string => {
                 return (
                   <DropdownMenuItem
                     key={space.id}
-                    onClick={() => setActiveSpaceId(space.id)} // Set activeSpaceId
+                    onClick={() => setCurrentSpaceId(space.id)}
                     className="gap-2 p-2"
                   >
                     <div className="flex size-6 items-center justify-center rounded-sm border overflow-hidden">

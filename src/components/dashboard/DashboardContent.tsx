@@ -1,7 +1,7 @@
 // components/dashboard/DashboardContent.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import WeeklyCalendar from "@/components/dashboard/WeeklyCalendar";
 import MyNotesList from "@/components/dashboard/MyNotesList";
 import PartnerNotesList from "@/components/dashboard/PartnerNotesList";
@@ -13,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createClient } from "@/utils/supabase/client";
+import { useSpace } from '@/contexts/SpaceContext';
 
 interface User {
   name: string;
@@ -29,6 +31,52 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   const [selectedDate, setSelectedDate] = useState(
     () => new Date().toISOString().split("T")[0]
   );
+  const { currentSpaceId } = useSpace();
+  const [partnerFirstName, setPartnerFirstName] = useState<string>("Partner");
+
+  useEffect(() => {
+    const fetchPartnerName = async () => {
+      if (!currentSpaceId) {
+        setPartnerFirstName("Partner");
+        return;
+      }
+      const supabase = createClient();
+      // Get current user
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      if (userError || !currentUser) {
+        setPartnerFirstName("Partner");
+        return;
+      }
+      // Get the current space
+      const { data: space, error: spaceError } = await supabase
+        .from("spaces")
+        .select("user_a_id, user_b_id")
+        .eq("id", currentSpaceId)
+        .single();
+      if (spaceError || !space) {
+        setPartnerFirstName("Partner");
+        return;
+      }
+      // Determine partner's user id
+      const partnerId = space.user_a_id === currentUser.id ? space.user_b_id : space.user_a_id;
+      if (!partnerId) {
+        setPartnerFirstName("Partner");
+        return;
+      }
+      // Fetch partner's user data
+      const { data: partner, error: partnerError } = await supabase
+        .from("users")
+        .select("first_name")
+        .eq("id", partnerId)
+        .single();
+      if (partnerError || !partner || !partner.first_name) {
+        setPartnerFirstName("Partner");
+        return;
+      }
+      setPartnerFirstName(partner.first_name);
+    };
+    fetchPartnerName();
+  }, [currentSpaceId]);
 
   return (
     <div className="flex flex-row gap-4 h-full overflow-hidden">
@@ -40,7 +88,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
       <Tabs defaultValue="myNotes" className="w-[400px]">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="myNotes">My Notes</TabsTrigger>
-          <TabsTrigger value="notesByPartner">Notes by Partner</TabsTrigger>
+          <TabsTrigger value="notesByPartner">Notes by {partnerFirstName}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="myNotes">
@@ -66,7 +114,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
             <CardHeader>
               <CardTitle>Partner&apos;s Notes</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Notes shared with you by your partner.
+                Notes shared with you by {partnerFirstName}.
               </CardDescription>
             </CardHeader>
             <CardContent className="h-full flex flex-col overflow-hidden">

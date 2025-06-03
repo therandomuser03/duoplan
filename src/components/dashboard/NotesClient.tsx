@@ -41,6 +41,7 @@ import {
   startOfDay,
   endOfDay,
 } from "date-fns";
+import { useSpace } from '@/contexts/SpaceContext';
 
 interface User {
   name: string;
@@ -51,6 +52,7 @@ interface User {
 interface Note {
   id: string;
   title: string;
+  space_id: string | null;
   content: string;
   start_time?: string;
   end_time?: string;
@@ -62,6 +64,7 @@ interface Note {
 
 export default function NotesClient({ user }: { user: User }) {
   const supabase = createClient();
+  const { currentSpaceId } = useSpace();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -81,7 +84,6 @@ export default function NotesClient({ user }: { user: User }) {
   const [error, setError] = useState<string | null>(null); // Added error state
   const [time, setTime] = useState(new Date()); // Added time state for header
 
-  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -130,14 +132,8 @@ export default function NotesClient({ user }: { user: User }) {
 
       if (spaces && spaces.length > 0) {
         const activeSpace = spaces[0];
-        setActiveSpaceId(activeSpace.id);
-        const determinedPartnerId =
-          activeSpace.user_a_id === currentUser.id
-            ? activeSpace.user_b_id
-            : activeSpace.user_a_id;
-        setPartnerId(determinedPartnerId);
+        setPartnerId(activeSpace.user_a_id === currentUser.id ? activeSpace.user_b_id : activeSpace.user_a_id);
       } else {
-        setActiveSpaceId(null);
         setPartnerId(null);
       }
     };
@@ -160,8 +156,8 @@ export default function NotesClient({ user }: { user: User }) {
       ...formData,
       start_time: startTimeUTC,
       end_time: endTimeUTC,
+      space_id: currentSpaceId,
       shareWithPartner,
-      activeSpaceId: shareWithPartner ? activeSpaceId : null,
       partnerId: shareWithPartner ? partnerId : null,
     };
 
@@ -231,7 +227,7 @@ export default function NotesClient({ user }: { user: User }) {
   };
 
   const handleToggleShare = async (note: Note, checked: boolean) => {
-    if (!activeSpaceId || !partnerId || !currentUserId) {
+    if (!currentSpaceId || !partnerId || !currentUserId) {
       toast.error(
         "Cannot share/unshare: Space or partner information is missing."
       );
@@ -256,7 +252,7 @@ export default function NotesClient({ user }: { user: User }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             noteId: note.id,
-            activeSpaceId: activeSpaceId,
+            space_id: currentSpaceId,
             partnerId: partnerId,
           }),
         });
@@ -292,7 +288,7 @@ export default function NotesClient({ user }: { user: User }) {
       toastId = toast.loading("Unsharing note...");
       try {
         const res = await fetch(
-          `/api/shared-notes?fromUserId=${currentUserId}&toUserId=${partnerId}&spaceId=${activeSpaceId}&title=${encodeURIComponent(
+          `/api/shared-notes?fromUserId=${currentUserId}&toUserId=${partnerId}&spaceId=${currentSpaceId}&title=${encodeURIComponent(
             note.title
           )}&content=${encodeURIComponent(note.content)}`,
           {
@@ -324,48 +320,40 @@ export default function NotesClient({ user }: { user: User }) {
   };
 
   const fetchNotes = useCallback(async () => {
-    if (!currentUserId) return;
-
+    if (!currentUserId || !currentSpaceId) return;
     setLoading(true);
-    setError(null); // Clear previous errors
-    const queryParams = new URLSearchParams();
-
-    if (partnerId && activeSpaceId) {
-      queryParams.append("partnerId", partnerId);
-      queryParams.append("activeSpaceId", activeSpaceId);
-    }
-
     try {
-      const res = await fetch(`/api/notes?${queryParams.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAllNotes(Array.isArray(data) ? data : []);
-      } else {
-        const errorData = await res.json(); // Get error data from response
-        const errorMessage =
-          errorData.message || res.statusText || "Failed to fetch notes.";
-        setError(errorMessage);
-        setAllNotes([]);
-        toast.error(`Error fetching notes: ${errorMessage}`);
-        console.error("Failed to fetch notes:", errorData);
-      }
+      // Fetch personal notes for this space
+      const { data: notes, error: notesError } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .eq('space_id', currentSpaceId);
+      if (notesError) throw notesError;
+
+      // Fetch shared notes for this space
+      const { data: sharedNotes, error: sharedNotesError } = await supabase
+        .from('shared_notes')
+        .select('*')
+        .eq('space_id', currentSpaceId)
+        .or(`from_user_id.eq.${currentUserId},to_user_id.eq.${currentUserId}`);
+      if (sharedNotesError) throw sharedNotesError;
+
+      setAllNotes([...(notes || []), ...(sharedNotes || [])]);
     } catch (error) {
-      console.error("Error fetching notes:", error);
-      setError(
-        error instanceof Error ? error.message : "An unknown error occurred."
-      );
       setAllNotes([]);
-      toast.error("An error occurred while fetching notes.");
+      toast.error('Failed to fetch notes.');
+      console.error('Failed to fetch notes:', error);
     } finally {
       setLoading(false);
     }
-  }, [currentUserId, partnerId, activeSpaceId]);
+  }, [currentUserId, currentSpaceId, supabase]);
 
   useEffect(() => {
-    if (currentUserId) {
+    if (currentUserId && currentSpaceId) {
       fetchNotes();
     }
-  }, [fetchNotes, currentUserId]);
+  }, [fetchNotes, currentUserId, currentSpaceId]);
 
   // Effect for updating the current time in the header
   useEffect(() => {
@@ -556,7 +544,7 @@ export default function NotesClient({ user }: { user: User }) {
                       id="share"
                       checked={shareWithPartner}
                       onCheckedChange={setShareWithPartner}
-                      disabled={!activeSpaceId || !partnerId}
+                      disabled={!currentSpaceId || !partnerId}
                     />
                     <Label htmlFor="share">
                       Share with partner when creating
@@ -628,7 +616,7 @@ export default function NotesClient({ user }: { user: User }) {
                         </p>
                         {note.user_id === currentUserId && (
                           <div className="flex items-center justify-end gap-2 mt-2">
-                            {partnerId && activeSpaceId && (
+                            {partnerId && currentSpaceId && (
                               <div className="flex items-center gap-2">
                                 <Label
                                   htmlFor={`share-note-${note.id}`}
@@ -643,7 +631,7 @@ export default function NotesClient({ user }: { user: User }) {
                                     handleToggleShare(note, checked)
                                   }
                                   disabled={
-                                    !activeSpaceId ||
+                                    !currentSpaceId ||
                                     !partnerId ||
                                     !!note.is_shared
                                   }

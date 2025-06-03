@@ -18,11 +18,12 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const direction = searchParams.get("direction"); // 'incoming' or 'outgoing'
+  const space_id = searchParams.get("space_id");
 
   try {
     if (direction === "incoming") {
       // Fetch notes shared with the current user
-      const { data: incomingNotes, error: incomingError } = await supabase
+      let query = supabase
         .from("shared_notes")
         .select(
           `
@@ -31,8 +32,11 @@ export async function GET(request: Request) {
           to_user:users!to_user_id(first_name, last_name, username, avatar_url)
         `
         )
-        .eq("to_user_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("to_user_id", user.id);
+      if (space_id) {
+        query = query.eq("space_id", space_id);
+      }
+      const { data: incomingNotes, error: incomingError } = await query.order("created_at", { ascending: false });
 
       if (incomingError) {
         console.error("Error fetching incoming notes:", incomingError);
@@ -57,7 +61,7 @@ export async function GET(request: Request) {
       return NextResponse.json(formattedNotes);
     } else if (direction === "outgoing") {
       // Fetch notes shared by the current user
-      const { data: outgoingNotes, error: outgoingError } = await supabase
+      let query = supabase
         .from("shared_notes")
         .select(
           `
@@ -66,8 +70,11 @@ export async function GET(request: Request) {
           to_user:users!to_user_id(first_name, last_name, username, avatar_url)
         `
         )
-        .eq("from_user_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("from_user_id", user.id);
+      if (space_id) {
+        query = query.eq("space_id", space_id);
+      }
+      const { data: outgoingNotes, error: outgoingError } = await query.order("created_at", { ascending: false });
 
       if (outgoingError) {
         console.error("Error fetching outgoing notes:", outgoingError);
