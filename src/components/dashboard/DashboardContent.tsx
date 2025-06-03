@@ -24,13 +24,11 @@ interface User {
 
 interface DashboardContentProps {
   user: User;
+  selectedDate: string;
+  onDateChange: (date: string) => void;
 }
 
-export default function DashboardContent({ user }: DashboardContentProps) {
-  // Lift the selectedDate state up to handle communication between components
-  const [selectedDate, setSelectedDate] = useState(
-    () => new Date().toISOString().split("T")[0]
-  );
+export default function DashboardContent({ user, selectedDate, onDateChange }: DashboardContentProps) {
   const { currentSpaceId } = useSpace();
   const [partnerFirstName, setPartnerFirstName] = useState<string>("Partner");
 
@@ -82,7 +80,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
     <div className="flex flex-row gap-4 h-full overflow-hidden">
       <WeeklyCalendar 
         selectedDate={selectedDate}
-        onDateSelect={setSelectedDate}
+        onDateSelect={onDateChange}
       />
 
       <Tabs defaultValue="myNotes" className="w-[400px]">
@@ -103,7 +101,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
               <MyNotesList 
                 user={user} 
                 selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
+                onDateChange={onDateChange}
               />
             </CardContent>
           </Card>
@@ -121,7 +119,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
               <PartnerNotesList 
                 user={user} 
                 selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
+                onDateChange={onDateChange}
               />
             </CardContent>
           </Card>

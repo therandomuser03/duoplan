@@ -4,6 +4,7 @@
 
 import * as React from "react";
 import { LifeBuoy, Send, BookText, Link } from "lucide-react";
+import { parseISO, format } from "date-fns";
 
 import { NavMain } from "@/components/dashboard/nav-main";
 import { NavUser } from "@/components/dashboard/nav-user";
@@ -37,9 +38,11 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     email: string;
     avatar: string;
   };
+  selectedDate: string;
+  onDateSelect: (date: string) => void;
 }
 
-export function AppSidebar({ user, ...props }: AppSidebarProps) {
+export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSidebarProps) {
   const supabase = createClient();
   const [userId, setUserId] = React.useState<string | null>(null);
 
@@ -68,7 +71,13 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SpaceSwitcherWrapper userId={userId} />
       </SidebarHeader>
       <SidebarContent>
-        <Calendar />
+        <Calendar
+          mode="single"
+          selected={selectedDate ? parseISO(selectedDate) : undefined}
+          onSelect={(date: Date | undefined) => {
+            if (date) onDateSelect(format(date, "yyyy-MM-dd"));
+          }}
+        />
         <NavMain items={staticData.navMain} />
       </SidebarContent>
       <SidebarFooter>

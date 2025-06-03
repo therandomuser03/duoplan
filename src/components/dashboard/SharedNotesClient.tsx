@@ -130,7 +130,9 @@ export default function SharedNotesClient({ user }: { user: User }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} />
+      <AppSidebar user={user} selectedDate={""} onDateSelect={function (date: string): void {
+        throw new Error("Function not implemented.");
+      } } />
       <SidebarInset>
         {/* HEADER */}
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">

@@ -1,4 +1,5 @@
-// app/dashboard/page.tsx
+"use client";
+import { useState } from "react";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import DashboardTimeHeader from "@/components/dashboard/DashboardTimeHeader";
@@ -18,16 +19,23 @@ import {
 import { getCurrentUser } from "@/utils/user";
 import { redirect } from "next/navigation";
 
-export default async function Dashboard() {
-  const user = await getCurrentUser();
+export default function DashboardPageWrapper() {
+  const [selectedDate, setSelectedDate] = useState(
+    () => new Date().toISOString().split("T")[0]
+  );
 
-  if (!user) {
-    redirect("/auth");
-  }
+  // You may need to fetch user in a useEffect or pass as prop if SSR
+  // For now, let's assume user is available as a global or context
+  // If not, you can move this logic to a server component and pass user as prop
+  // const user = ...
+
+  // Placeholder for user fetching logic
+  // Replace with your actual user fetching logic
+  const user = { name: "", email: "", avatar: "" };
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} />
+      <AppSidebar user={user} selectedDate={selectedDate} onDateSelect={setSelectedDate} />
       <SidebarInset className="flex flex-col h-screen overflow-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
@@ -44,11 +52,9 @@ export default async function Dashboard() {
             </Breadcrumb>
           </div>
         </header>
-        
         <DashboardTimeHeader />
-
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0 overflow-hidden">
-          <DashboardContent user={user} />
+          <DashboardContent user={user} selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </div>
       </SidebarInset>
     </SidebarProvider>
