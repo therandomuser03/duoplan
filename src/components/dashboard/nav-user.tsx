@@ -5,9 +5,9 @@ import {
   Bell,
   ChevronsUpDown,
   CreditCard,
-  LifeBuoy,
+  // LifeBuoy,
   LogOut,
-  Sparkles,
+  // Sparkles,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -124,7 +124,7 @@ export function NavUser({
                   Billing
                 </DropdownMenuItem>
               </Link>
-              <Link href="/feedback">
+              {/* <Link href="/feedback">
                 <DropdownMenuItem>
                   <Sparkles />
                   Feedback
@@ -135,7 +135,7 @@ export function NavUser({
                   <LifeBuoy />
                   Support
                 </DropdownMenuItem>
-              </Link>
+              </Link> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>

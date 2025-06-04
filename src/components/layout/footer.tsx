@@ -14,19 +14,19 @@ export default function Footer() {
         </p>
         <div className="flex gap-4">
           <Link
-            href="#"
+            href="/privacy"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Privacy
           </Link>
           <Link
-            href="#"
+            href="/terms"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Terms
           </Link>
           <Link
-            href="#"
+            href="https://linktr.ee/therandomuser03"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Contact
