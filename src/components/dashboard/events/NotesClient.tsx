@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/utils/supabase/client";
-import { Trash2, RefreshCw } from "lucide-react"; // Added RefreshCw import
+import { Trash2, RefreshCw, ClockFading } from "lucide-react"; // Added RefreshCw import
 import { toast } from "sonner";
 import {
   format,
@@ -41,8 +41,18 @@ import {
   startOfDay,
   endOfDay,
 } from "date-fns";
-import { useSpace } from '@/contexts/SpaceContext';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useSpace } from "@/contexts/SpaceContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface User {
   name: string;
@@ -91,8 +101,12 @@ export default function NotesClient({ user }: { user: User }) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
 
-  const [isShareAlertDialogOpen, setIsShareAlertDialogOpen] = useState<{ [key: string]: boolean }>({});
-  const [, setIsUnshareAlertDialogOpen] = useState<{ [key: string]: boolean }>({});
+  const [isShareAlertDialogOpen, setIsShareAlertDialogOpen] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [, setIsUnshareAlertDialogOpen] = useState<{ [key: string]: boolean }>(
+    {}
+  );
 
   const colorOptions = [
     { name: "None", value: "none" },
@@ -143,7 +157,9 @@ export default function NotesClient({ user }: { user: User }) {
         return;
       }
 
-      setPartnerId(space.user_a_id === currentUser.id ? space.user_b_id : space.user_a_id);
+      setPartnerId(
+        space.user_a_id === currentUser.id ? space.user_b_id : space.user_a_id
+      );
     };
 
     fetchSpaceAndPartner();
@@ -205,7 +221,7 @@ export default function NotesClient({ user }: { user: User }) {
 
   const handleDeleteNote = async (noteId: string) => {
     // Instead of immediate confirmation, set the note to delete and open the dialog
-    setNoteToDelete(allNotes.find(note => note.id === noteId) || null);
+    setNoteToDelete(allNotes.find((note) => note.id === noteId) || null);
     setIsDeleteDialogOpen(true);
   };
 
@@ -242,19 +258,31 @@ export default function NotesClient({ user }: { user: User }) {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleToggleShare = async (note: Note, checked: boolean) => {
     if (!note.id || !currentSpaceId || !partnerId || !currentUserId) {
       toast.error("Missing event, space, or partner ID!");
-      console.error("Missing IDs", { noteId: note.id, currentSpaceId, partnerId, currentUserId });
+      console.error("Missing IDs", {
+        noteId: note.id,
+        currentSpaceId,
+        partnerId,
+        currentUserId,
+      });
       return;
     }
 
     if (checked) {
       // Open share confirmation dialog
-      setIsShareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: true }));
+      setIsShareAlertDialogOpen((prevState) => ({
+        ...prevState,
+        [note.id]: true,
+      }));
     } else {
       // Open unshare confirmation dialog
-      setIsUnshareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: true }));
+      setIsUnshareAlertDialogOpen((prevState) => ({
+        ...prevState,
+        [note.id]: true,
+      }));
     }
   };
 
@@ -279,15 +307,22 @@ export default function NotesClient({ user }: { user: User }) {
         toast.success("Event shared successfully!", { id: toastId });
         fetchNotes();
       } else {
-        toast.error(`Failed to share event: ${data.error || res.statusText}`, { id: toastId });
+        toast.error(`Failed to share event: ${data.error || res.statusText}`, {
+          id: toastId,
+        });
         fetchNotes();
       }
     } catch (err) {
       console.error("Error sharing event:", err);
-      toast.error("Error sharing event. Check console for details.", { id: toastId });
+      toast.error("Error sharing event. Check console for details.", {
+        id: toastId,
+      });
       fetchNotes();
     } finally {
-      setIsShareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: false }));
+      setIsShareAlertDialogOpen((prevState) => ({
+        ...prevState,
+        [note.id]: false,
+      }));
     }
   };
 
@@ -324,7 +359,10 @@ export default function NotesClient({ user }: { user: User }) {
       });
       fetchNotes();
     } finally {
-      setIsUnshareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: false }));
+      setIsUnshareAlertDialogOpen((prevState) => ({
+        ...prevState,
+        [note.id]: false,
+      }));
     }
   };
 
@@ -334,34 +372,37 @@ export default function NotesClient({ user }: { user: User }) {
     try {
       // Fetch personal notes for this space
       const { data: notes, error: notesError } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', currentUserId)
-        .eq('space_id', currentSpaceId);
+        .from("notes")
+        .select("*")
+        .eq("user_id", currentUserId)
+        .eq("space_id", currentSpaceId);
       if (notesError) throw notesError;
 
       // Fetch shared notes for this space
       const { data: sharedNotes, error: sharedNotesError } = await supabase
-        .from('shared_notes')
-        .select('*')
-        .eq('space_id', currentSpaceId)
+        .from("shared_notes")
+        .select("*")
+        .eq("space_id", currentSpaceId)
         .or(`from_user_id.eq.${currentUserId},to_user_id.eq.${currentUserId}`);
       if (sharedNotesError) throw sharedNotesError;
 
       // Get shared note IDs to mark original notes as shared
-      const sharedNoteIds = new Set(sharedNotes?.map(note => note.original_note_id) || []);
-      
+      const sharedNoteIds = new Set(
+        sharedNotes?.map((note) => note.original_note_id) || []
+      );
+
       // Mark notes as shared if they are in the shared_notes table
-      const notesWithSharedStatus = notes?.map(note => ({
-        ...note,
-        is_shared: sharedNoteIds.has(note.id)
-      })) || [];
+      const notesWithSharedStatus =
+        notes?.map((note) => ({
+          ...note,
+          is_shared: sharedNoteIds.has(note.id),
+        })) || [];
 
       setAllNotes(notesWithSharedStatus);
     } catch (error) {
       setAllNotes([]);
-      toast.error('Failed to fetch events.');
-      console.error('Failed to fetch events:', error);
+      toast.error("Failed to fetch events.");
+      console.error("Failed to fetch events:", error);
     } finally {
       setLoading(false);
     }
@@ -607,14 +648,21 @@ export default function NotesClient({ user }: { user: User }) {
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                           {note.content}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="flex items-center text-xs text-muted-foreground gap-1.5">
+                          <ClockFading className="w-4 h-4" /> :{" "}
                           {note.start_time && note.end_time
                             ? `${new Date(note.start_time).toLocaleTimeString(
                                 [],
-                                { hour: "2-digit", minute: "2-digit" }
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
                               )} - ${new Date(note.end_time).toLocaleTimeString(
                                 [],
-                                { hour: "2-digit", minute: "2-digit" }
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
                               )}`
                             : note.start_time
                             ? `Starts: ${new Date(
@@ -642,28 +690,58 @@ export default function NotesClient({ user }: { user: User }) {
                                 >
                                   {note.is_shared ? "Shared" : "Share"}
                                 </Label>
+
+                                {/* Show Switch always */}
+                                <Switch
+                                  id={`share-event-${note.id}`}
+                                  checked={!!note.is_shared}
+                                  disabled={!!note.is_shared}
+                                  onCheckedChange={() => {
+                                    // Open alert dialog if not already shared
+                                    if (!note.is_shared) {
+                                      setIsShareAlertDialogOpen((prev) => ({
+                                        ...prev,
+                                        [note.id]: true,
+                                      }));
+                                    }
+                                  }}
+                                />
+
+                                {/* AlertDialog for confirmation */}
                                 <AlertDialog
-                                  open={isShareAlertDialogOpen[note.id] || false}
-                                  onOpenChange={(isOpen) => setIsShareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: isOpen }))}
+                                  open={
+                                    isShareAlertDialogOpen[note.id] || false
+                                  }
+                                  onOpenChange={(isOpen) =>
+                                    setIsShareAlertDialogOpen((prev) => ({
+                                      ...prev,
+                                      [note.id]: isOpen,
+                                    }))
+                                  }
                                 >
-                                  <AlertDialogTrigger asChild>
-                                    <Switch
-                                      id={`share-event-${note.id}`}
-                                      checked={!!note.is_shared}
-                                      onCheckedChange={(checked) => handleToggleShare(note, checked)}
-                                      disabled={!currentSpaceId || !partnerId || !!note.is_shared}
-                                    />
-                                  </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Share Event</AlertDialogTitle>
+                                      <AlertDialogTitle>
+                                        Share Event
+                                      </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to share &quot;{note.title}&quot; with your partner?
+                                        Are you sure you want to share &quot;
+                                        {note.title}&quot; with your partner?
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => confirmShareNote(note)}>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => {
+                                          confirmShareNote(note);
+                                          setIsShareAlertDialogOpen((prev) => ({
+                                            ...prev,
+                                            [note.id]: false,
+                                          }));
+                                        }}
+                                      >
                                         Share
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -671,28 +749,43 @@ export default function NotesClient({ user }: { user: User }) {
                                 </AlertDialog>
                               </div>
                             )}
-                            <AlertDialog open={isDeleteDialogOpen && noteToDelete?.id === note.id} onOpenChange={setIsDeleteDialogOpen}>
+
+                            {/* Delete Dialog remains unchanged */}
+                            <AlertDialog
+                              open={
+                                isDeleteDialogOpen &&
+                                noteToDelete?.id === note.id
+                              }
+                              onOpenChange={setIsDeleteDialogOpen}
+                            >
                               <AlertDialogTrigger asChild>
                                 <Button
                                   variant="destructive"
                                   size="sm"
-                                  onClick={() => handleDeleteNote(note.id)} // This will now set the state and open the dialog
+                                  onClick={() => handleDeleteNote(note.id)}
                                 >
                                   <Trash2 className="size-4 mr-1" /> Delete
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the event
-                                    <span className="font-semibold"> &quot;{noteToDelete?.title}&quot; </span>
+                                    This action cannot be undone. This will
+                                    permanently delete the event
+                                    <span className="font-semibold">
+                                      &quot;{noteToDelete?.title}&quot;
+                                    </span>
                                     and remove its data from our servers.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={confirmDeleteNote}>
+                                  <AlertDialogAction
+                                    onClick={confirmDeleteNote}
+                                  >
                                     Continue
                                   </AlertDialogAction>
                                 </AlertDialogFooter>

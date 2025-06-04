@@ -21,9 +21,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { AtSign, ClockFading, PencilLine, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
-import { useSpace } from '@/contexts/SpaceContext';
+import { useSpace } from "@/contexts/SpaceContext";
 
 interface User {
   name: string;
@@ -64,8 +64,12 @@ export default function SharedNotesClient({ user }: { user: User }) {
         return;
       }
       const [incomingRes, outgoingRes] = await Promise.all([
-        fetch(`/api/shared-notes?direction=incoming&space_id=${currentSpaceId}`),
-        fetch(`/api/shared-notes?direction=outgoing&space_id=${currentSpaceId}`),
+        fetch(
+          `/api/shared-notes?direction=incoming&space_id=${currentSpaceId}`
+        ),
+        fetch(
+          `/api/shared-notes?direction=outgoing&space_id=${currentSpaceId}`
+        ),
       ]);
       if (!incomingRes.ok || !outgoingRes.ok) {
         throw new Error(
@@ -181,17 +185,17 @@ export default function SharedNotesClient({ user }: { user: User }) {
             {/* LEFT COLUMN - NOTES SHARED WITH ME */}
             <div className="border border-gray-300 rounded-lg p-4">
               <h2 className="text-lg font-semibold mb-2">
-  Events Shared By{" "}
-  {incomingNotes.length > 0
-    ? (() => {
-        const name =
-          incomingNotes[0].from_user_name === user.name
-            ? incomingNotes[0].to_user_name || "Partner"
-            : incomingNotes[0].from_user_name || "Partner";
-        return name.split(" ")[0]; // Only first name
-      })()
-    : "Partner"}
-</h2>
+                Events Shared By{" "}
+                {incomingNotes.length > 0
+                  ? (() => {
+                      const name =
+                        incomingNotes[0].from_user_name === user.name
+                          ? incomingNotes[0].to_user_name || "Partner"
+                          : incomingNotes[0].from_user_name || "Partner";
+                      return name.split(" ")[0]; // Only first name
+                    })()
+                  : "Partner"}
+              </h2>
               {loading ? (
                 <div className="space-y-3">
                   <Skeleton className="h-24 w-full rounded-xl" />
@@ -218,7 +222,7 @@ export default function SharedNotesClient({ user }: { user: User }) {
                         <h3 className="text-base font-medium truncate pr-2">
                           {note.title}
                         </h3>
-                        <Avatar className="h-6 w-6 text-xs flex-shrink-0">
+                        <Avatar className="h-9 w-9 text-xs flex-shrink-0">
                           {note.from_user_avatar && (
                             <AvatarImage
                               src={note.from_user_avatar}
@@ -234,14 +238,20 @@ export default function SharedNotesClient({ user }: { user: User }) {
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-3">
                         {note.content || "No content"}
                       </p>
-                      <div className="flex justify-between items-center text-xs text-muted-foreground">
-                        <span>From: {note.from_user_name || "Unknown"}</span>
-                        <span>{formatDateTime(note.created_at)}</span>
+                      <div className="flex flex-col text-xs text-muted-foreground mb-2">
+                        <span>— {note.from_user_name || "Unknown"}</span>
+                        <span>
+                          <PencilLine className="w-3 h-3 inline-block" /> :{" "}
+                          {formatDateTime(note.created_at)}
+                        </span>
                       </div>
                       {(note.start_time || note.end_time) && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Schedule: {formatDateTime(note.start_time)} -{" "}
-                          {formatDateTime(note.end_time)}
+                        <div className="flex items-center text-xs text-muted-foreground mt-1 gap-1.5">
+                          <ClockFading className="w-4 h-4" /> :{" "}
+                          <span>
+                            {formatDateTime(note.start_time)} -{" "}
+                            {formatDateTime(note.end_time)}
+                          </span>
                         </div>
                       )}
                     </Card>
@@ -279,23 +289,40 @@ export default function SharedNotesClient({ user }: { user: User }) {
                         <h3 className="text-base font-medium truncate pr-2">
                           {note.title}
                         </h3>
-                        {/* <Avatar className="h-6 w-6 text-xs flex-shrink-0">
+                        <Avatar className="h-9 w-9 text-xs flex-shrink-0">
+                          {user.avatar && (
+                            <AvatarImage
+                              src={user.avatar}
+                              alt={`${user.name}'s avatar`}
+                            />
+                          )}
                           <AvatarFallback>
-                            {note.to_user_name?.slice(0, 2).toUpperCase() || "P"}
+                            {user.name?.slice(0, 2).toUpperCase() || "U"}
                           </AvatarFallback>
-                        </Avatar> */}
+                        </Avatar>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-3">
                         {note.content || "No content"}
                       </p>
-                      <div className="flex justify-between items-center text-xs text-muted-foreground">
-                        <span>To: {note.to_user_name || "Unknown"}</span>
-                        <span>{formatDateTime(note.created_at)}</span>
+                      <div className="flex flex-col items-start text-xs text-muted-foreground mb-2">
+                        <span>
+                          <AtSign className="inline-block w-3 h-3 mr-1" />:{" "}
+                          {note.to_user_name || "Unknown"}
+                        </span>
+                        <span>
+                          <PencilLine className="inline-block w-3 h-3 mr-1" />:{" "}
+                          {formatDateTime(note.created_at)}
+                        </span>
                       </div>
+
                       {(note.start_time || note.end_time) && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Schedule: {formatDateTime(note.start_time)} -{" "}
-                          {formatDateTime(note.end_time)}
+                        <div className="flex items-center text-xs text-muted-foreground mt-1 gap-1">
+                          <ClockFading className="w-4 h-4" />
+                          <span>:</span>
+                          <span>
+                            {formatDateTime(note.start_time)} -{" "}
+                            {formatDateTime(note.end_time)}
+                          </span>
                         </div>
                       )}
                     </Card>

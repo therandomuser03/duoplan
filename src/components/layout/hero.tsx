@@ -18,7 +18,7 @@ export default function Hero() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center lg:flex-row lg:items-start lg:justify-between gap-8 lg:gap-12">
           <div className="flex-1 text-center lg:text-left max-w-2xl">
-            <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-5xl">
+            <h1 className="mb-6 text-3xl font-bold tracking-tight sm:text-5xl md:text-5xl">
               <TextAnimate animation="blurInUp" by="character" once>
                 Plan Together, Stay in Sync
               </TextAnimate>

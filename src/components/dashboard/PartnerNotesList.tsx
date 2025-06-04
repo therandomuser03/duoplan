@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, isSameDay, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { Badge } from "../ui/badge";
-import { CalendarCheck2, CalendarDays, PencilLine } from "lucide-react";
+import { CalendarDays, ClockFading, PencilLine } from "lucide-react";
 import { useSpace } from '@/contexts/SpaceContext';
 
 interface User {
@@ -217,7 +217,7 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
                       New
                     </Badge>
                   )}
-                  <Avatar className="h-6 w-6 text-xs flex-shrink-0">
+                  <Avatar className="h-9 w-9 text-xs flex-shrink-0">
                     <AvatarImage src={note.from_user_avatar} />
                     <AvatarFallback>
                       {note.from_user_name?.slice(0, 2).toUpperCase() || "P"}
@@ -229,7 +229,7 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
               <p className="text-sm text-muted-foreground mb-2 line-clamp-3">
                 {note.content || " "}
               </p>
-              <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground mb-2">
                 <span>From: {note.from_user_name || "Unknown"}</span>
 
                 <span className="flex items-center gap-1">
@@ -239,14 +239,13 @@ export default function PartnerNotesList({ selectedDate }: PartnerNotesListProps
 
               {(note.start_time || note.end_time) && (
                 <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                  <CalendarDays className="w-4 h-4" />
-                  {formatDateRangeIfNeeded(note.start_time, note.end_time)}
+                  <CalendarDays className="w-3 h-3" /> : {formatDateRangeIfNeeded(note.start_time, note.end_time)}
                 </div>
               )}
 
               {(note.start_time || note.end_time) && (
                 <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                  <CalendarCheck2 className="w-4 h-4" />:{" "}
+                  <ClockFading className="w-4 h-4" />:{" "}
                   {formatDateTime2(note.start_time)} -{" "}
                   {formatDateTime2(note.end_time)}
                 </div>

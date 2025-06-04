@@ -120,7 +120,7 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
         </TabsContent>
 
         <TabsContent value="notesByPartner">
-          <Card className="h-[calc(100vh-28rem)] md:h-full">
+          <Card className="md:h-full">
             <CardHeader>
               <CardTitle>Partner&apos;s Events</CardTitle>
               <CardDescription className="text-muted-foreground">
