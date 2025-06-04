@@ -27,6 +27,12 @@ const nextConfig: NextConfig = {
       {
         source: '/support', destination: '/user/support',
       },
+      {
+        source: '/privacy', destination: '/user/privacy',
+      },
+      {
+        source: '/terms', destination: '/user/terms',
+      },
     ];
   },
 };

@@ -4,13 +4,15 @@
 
 import React, { useMemo, useState } from "react";
 import { format, startOfWeek, addDays, isToday, isSameDay, addWeeks, subWeeks } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface WeeklyCalendarProps {
   selectedDate: string; // YYYY-MM-DD format
   onDateSelect: (date: string) => void;
+  className?: string;
 }
 
-export default function WeeklyCalendar({ selectedDate, onDateSelect }: WeeklyCalendarProps) {
+export default function WeeklyCalendar({ selectedDate, onDateSelect, className }: WeeklyCalendarProps) {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   
   const selectedDateObj = useMemo(() => new Date(selectedDate), [selectedDate]);
@@ -47,7 +49,7 @@ export default function WeeklyCalendar({ selectedDate, onDateSelect }: WeeklyCal
   };
 
   return (
-    <div className="flex-[3] bg-background rounded-xl p-6 shadow-md">
+    <div className={cn("flex-[3] bg-background rounded-xl p-6 shadow-md", className)}>
       <h2 className="text-2xl font-semibold mb-2">Weekly Calendar</h2>
       
       {/* Week Range with Navigation */}

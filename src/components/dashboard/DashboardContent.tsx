@@ -87,27 +87,28 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
   }, [currentSpaceId]);
 
   return (
-    <div className="flex flex-row gap-4 h-full overflow-hidden">
+    <div className="flex flex-col md:flex-row gap-4 h-full overflow-y-auto md:overflow-hidden">
       <WeeklyCalendar 
         selectedDate={selectedDate}
         onDateSelect={onDateChange}
+        className="w-full md:w-auto"
       />
 
-      <Tabs defaultValue="myNotes" className="w-[400px]">
+      <Tabs defaultValue="myNotes" className="w-full md:w-[400px]">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="myNotes">My Events</TabsTrigger>
           <TabsTrigger value="notesByPartner">Events by {partnerFirstName}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="myNotes">
-          <Card>
+          <Card className="h-[calc(100vh-28rem)] md:h-full">
             <CardHeader>
               <CardTitle>My Events</CardTitle>
               <CardDescription className="text-muted-foreground">
                 All your personal events and tasks.
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-full flex flex-col overflow-hidden">
+            <CardContent className="h-full flex flex-col overflow-y-auto">
               <MyNotesList 
                 user={user} 
                 selectedDate={selectedDate}
@@ -119,14 +120,14 @@ export default function DashboardContent({ user, selectedDate, onDateChange }: D
         </TabsContent>
 
         <TabsContent value="notesByPartner">
-          <Card>
+          <Card className="h-[calc(100vh-28rem)] md:h-full">
             <CardHeader>
               <CardTitle>Partner&apos;s Events</CardTitle>
               <CardDescription className="text-muted-foreground">
                 Events shared with you by {partnerFirstName}.
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-full flex flex-col overflow-hidden">
+            <CardContent className="h-full flex flex-col overflow-y-auto">
               <PartnerNotesList 
                 user={user} 
                 selectedDate={selectedDate}

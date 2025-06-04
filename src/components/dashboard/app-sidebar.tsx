@@ -21,10 +21,7 @@ import { NavSecondary } from "./nav-secondary";
 import { Calendar } from "../ui/calendar";
 import { createClient } from "@/utils/supabase/client";
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 
 const staticData = {

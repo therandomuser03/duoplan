@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { format, parseISO, isSameDay, isWithinInterval, startOfDay, endOfDay } from "date-fns"; // Added date-fns imports
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSpace } from '@/contexts/SpaceContext';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 
 interface User {
   name: string;
@@ -46,6 +47,9 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
 
   const [, setPartnerId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [noteToDeleteId, setNoteToDeleteId] = useState<string | null>(null);
 
   const formatDateTime = (dateString?: string) => {
     if (!dateString) return "";
@@ -204,14 +208,23 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
   }, [allNotes, selectedDate, filterNotesByDate, loading]);
 
 
-  const handleDeleteNote = async (noteId: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) {
+  const handleDeleteNote = (noteId: string) => {
+    // Set the ID of the note to be deleted and open the dialog
+    setNoteToDeleteId(noteId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteNote = async () => {
+    if (!noteToDeleteId) {
+      toast.error("No event selected for deletion.");
+      setIsDeleteDialogOpen(false); // Close dialog if no ID
       return;
     }
+
     const toastId = toast.loading("Deleting event...");
 
     try {
-      const res = await fetch(`/api/notes?id=${noteId}`, {
+      const res = await fetch(`/api/notes?id=${noteToDeleteId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
@@ -233,6 +246,9 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
       toast.error("Error deleting event. Check console for details.", {
         id: toastId,
       });
+    } finally {
+      setIsDeleteDialogOpen(false); // Close the dialog regardless of success/failure
+      setNoteToDeleteId(null); // Clear the ID
     }
   };
 
@@ -280,13 +296,33 @@ export default function MyNotesList({ selectedDate }: MyNotesListProps) {
                   you can add it back here. For now, it's removed as the primary
                   focus is on the note display and deletion.
                 */}
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteNote(note.id)}
-                >
-                  <Trash2 className="size-4 mr-1" /> Delete
-                </Button>
+                <AlertDialog open={isDeleteDialogOpen && noteToDeleteId === note.id} onOpenChange={setIsDeleteDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteNote(note.id)} // This now only sets the state and opens the dialog
+                    >
+                      <Trash2 className="size-4 mr-1" /> Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your event
+                        <span className="font-semibold"> &quot;{displayedNotes.find(n => n.id === noteToDeleteId)?.title || 'this event'}&quot; </span>
+                        and remove its data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={confirmDeleteNote}>
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </Card>
           ))

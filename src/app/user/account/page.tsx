@@ -7,8 +7,10 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -142,6 +144,10 @@ export default function Account() { // Changed to client component, removed 'asy
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
                 <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                              </BreadcrumbItem>
+                              <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
                     <BreadcrumbPage>Account</BreadcrumbPage>
                   </BreadcrumbItem>
@@ -181,6 +187,10 @@ export default function Account() { // Changed to client component, removed 'asy
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
                   <BreadcrumbPage>Account</BreadcrumbPage>
                 </BreadcrumbItem>

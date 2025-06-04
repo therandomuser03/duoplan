@@ -26,7 +26,7 @@ export default function DashboardPageWrapper() {
   );
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasSpaces, setHasSpaces] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [, setUserId] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -71,13 +71,13 @@ export default function DashboardPageWrapper() {
           </div>
         </header>
         <DashboardTimeHeader onRefresh={handleRefresh} />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 overflow-hidden">
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 overflow-y-auto md:overflow-hidden">
           {!hasSpaces && (
             <Alert className="mb-4">
               <InfoIcon className="h-4 w-4" />
               <AlertTitle>No Spaces Joined</AlertTitle>
               <AlertDescription>
-                You haven't joined any spaces yet. Join a space to start creating and sharing events.
+                You haven&apos;t joined any spaces yet. Join a space to start creating and sharing events.
               </AlertDescription>
             </Alert>
           )}

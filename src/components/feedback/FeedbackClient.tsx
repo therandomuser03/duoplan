@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import {
   Breadcrumb,
@@ -20,16 +21,62 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
+import { UserDisplayData } from "@/utils/user";
 
-interface User {
-  name: string;
-  email: string;
-  avatar: string;
-}
+// Configure Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-export default function FeedbackClient({ user }: { user: User }) {
+export default function FeedbackClient({ user }: { user: UserDisplayData }) {
+  const [name, setName] = useState(user.name || "");
+  const [email, setEmail] = useState(user.email || "");
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validate form
+    if (!rating) {
+      setError("Please select a rating");
+      return;
+    }
+    if (!message.trim()) {
+      setError("Please enter your feedback message");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error: submitError } = await supabase.from("feedback").insert({
+        name,
+        email,
+        rating,
+        message: message.trim(),
+        created_at: new Date().toISOString()
+      });
+
+      if (submitError) {
+        throw new Error(submitError.message);
+      }
+
+      // Reset form
+      setRating(0);
+      setMessage("");
+      alert("Thank you for your feedback!");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit feedback. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -64,15 +111,32 @@ export default function FeedbackClient({ user }: { user: User }) {
             </p>
           </div>
 
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="block text-sm font-medium">Name</label>
-              <Input placeholder="Your name" />
+              <Input 
+                placeholder="Your name" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)}
+                disabled={isSubmitting}
+              />
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-medium">Email</label>
-              <Input type="email" placeholder="you@example.com" />
+              <Input 
+                type="email" 
+                placeholder="you@example.com" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
+              />
             </div>
 
             <div className="space-y-2">
@@ -86,13 +150,11 @@ export default function FeedbackClient({ user }: { user: User }) {
                     <Star
                       key={star}
                       className={`h-5 w-5 cursor-pointer ${
-                        isFilled
-                          ? "fill-yellow-400 stroke-yellow-400"
-                          : "stroke-muted-foreground"
-                      }`}
-                      onClick={() => setRating(star)}
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(0)}
+                        isFilled ? "fill-yellow-400 stroke-yellow-400" : "stroke-muted-foreground"
+                      } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                      onClick={() => !isSubmitting && setRating(star)}
+                      onMouseEnter={() => !isSubmitting && setHoverRating(star)}
+                      onMouseLeave={() => !isSubmitting && setHoverRating(0)}
                     />
                   );
                 })}
@@ -101,11 +163,17 @@ export default function FeedbackClient({ user }: { user: User }) {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium">Message</label>
-              <Textarea rows={4} placeholder="Share your thoughts..." />
+              <Textarea 
+                rows={4} 
+                placeholder="Share your thoughts..." 
+                value={message} 
+                onChange={(e) => setMessage(e.target.value)}
+                disabled={isSubmitting}
+              />
             </div>
 
-            <Button type="submit">
-              Submit Feedback
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Feedback"}
             </Button>
           </form>
         </div>

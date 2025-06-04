@@ -42,6 +42,7 @@ import {
   endOfDay,
 } from "date-fns";
 import { useSpace } from '@/contexts/SpaceContext';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface User {
   name: string;
@@ -86,6 +87,12 @@ export default function NotesClient({ user }: { user: User }) {
 
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+
+  const [isShareAlertDialogOpen, setIsShareAlertDialogOpen] = useState<{ [key: string]: boolean }>({});
+  const [, setIsUnshareAlertDialogOpen] = useState<{ [key: string]: boolean }>({});
 
   const colorOptions = [
     { name: "None", value: "none" },
@@ -197,13 +204,18 @@ export default function NotesClient({ user }: { user: User }) {
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) {
-      return;
-    }
+    // Instead of immediate confirmation, set the note to delete and open the dialog
+    setNoteToDelete(allNotes.find(note => note.id === noteId) || null);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteNote = async () => {
+    if (!noteToDelete) return;
+
     const toastId = toast.loading("Deleting event...");
 
     try {
-      const res = await fetch(`/api/notes?id=${noteId}`, {
+      const res = await fetch(`/api/notes?id=${noteToDelete.id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
@@ -224,6 +236,9 @@ export default function NotesClient({ user }: { user: User }) {
       toast.error("Error deleting event. Check console for details.", {
         id: toastId,
       });
+    } finally {
+      setIsDeleteDialogOpen(false); // Close the dialog
+      setNoteToDelete(null); // Clear the note
     }
   };
 
@@ -234,80 +249,82 @@ export default function NotesClient({ user }: { user: User }) {
       return;
     }
 
-    let toastId: string | number | undefined;
-
     if (checked) {
-      if (!confirm(`Are you sure you want to share "${note.title}" with your partner?`)) {
-        return;
-      }
-      toastId = toast.loading("Sharing event...");
-      try {
-        const payload = {
-          noteId: note.id,
-          activeSpaceId: currentSpaceId,
-          partnerId: partnerId,
-        };
-        console.log("Sharing event with payload:", payload);
-        const res = await fetch("/api/shared-notes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        console.log("Share event response:", data);
-
-        if (res.ok) {
-          toast.success("Event shared successfully!", { id: toastId });
-          fetchNotes();
-        } else {
-          toast.error(`Failed to share event: ${data.error || res.statusText}`, { id: toastId });
-          fetchNotes();
-        }
-      } catch (err) {
-        console.error("Error sharing event:", err);
-        toast.error("Error sharing event. Check console for details.", { id: toastId });
-        fetchNotes();
-      }
+      // Open share confirmation dialog
+      setIsShareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: true }));
     } else {
-      // User wants to UNSHARE
-      if (
-        !confirm(
-          `Are you sure you want to unshare "${note.title}"? This will remove the shared copy from your partner.`
-        )
-      ) {
-        return;
-      }
-      toastId = toast.loading("Unsharing event...");
-      try {
-        const res = await fetch(
-          `/api/shared-notes?fromUserId=${currentUserId}&toUserId=${partnerId}&spaceId=${currentSpaceId}&title=${encodeURIComponent(
-            note.title
-          )}&content=${encodeURIComponent(note.content)}`,
-          {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-          }
-        );
+      // Open unshare confirmation dialog
+      setIsUnshareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: true }));
+    }
+  };
 
-        if (res.ok) {
-          toast.success("Event unshared successfully!", { id: toastId });
-          fetchNotes(); // Re-fetch all notes to update shared status
-        } else {
-          const errorData = await res.json();
-          toast.error(
-            `Failed to unshare event: ${errorData.message || res.statusText}`,
-            { id: toastId }
-          );
-          console.error("Failed to unshare event:", errorData);
-          fetchNotes();
-        }
-      } catch (err) {
-        console.error("Error unsharing event:", err);
-        toast.error("Error unsharing event. Check console for details.", {
-          id: toastId,
-        });
+  const confirmShareNote = async (note: Note) => {
+    const toastId = toast.loading("Sharing event...");
+    try {
+      const payload = {
+        noteId: note.id,
+        activeSpaceId: currentSpaceId,
+        partnerId: partnerId,
+      };
+      console.log("Sharing event with payload:", payload);
+      const res = await fetch("/api/shared-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      console.log("Share event response:", data);
+
+      if (res.ok) {
+        toast.success("Event shared successfully!", { id: toastId });
+        fetchNotes();
+      } else {
+        toast.error(`Failed to share event: ${data.error || res.statusText}`, { id: toastId });
         fetchNotes();
       }
+    } catch (err) {
+      console.error("Error sharing event:", err);
+      toast.error("Error sharing event. Check console for details.", { id: toastId });
+      fetchNotes();
+    } finally {
+      setIsShareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: false }));
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const confirmUnshareNote = async (note: Note) => {
+    const toastId = toast.loading("Unsharing event...");
+    try {
+      const res = await fetch(
+        `/api/shared-notes?fromUserId=${currentUserId}&toUserId=${partnerId}&spaceId=${currentSpaceId}&title=${encodeURIComponent(
+          note.title
+        )}&content=${encodeURIComponent(note.content)}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (res.ok) {
+        toast.success("Event unshared successfully!", { id: toastId });
+        fetchNotes(); // Re-fetch all notes to update shared status
+      } else {
+        const errorData = await res.json();
+        toast.error(
+          `Failed to unshare event: ${errorData.message || res.statusText}`,
+          { id: toastId }
+        );
+        console.error("Failed to unshare event:", errorData);
+        fetchNotes();
+      }
+    } catch (err) {
+      console.error("Error unsharing event:", err);
+      toast.error("Error unsharing event. Check console for details.", {
+        id: toastId,
+      });
+      fetchNotes();
+    } finally {
+      setIsUnshareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: false }));
     }
   };
 
@@ -625,27 +642,62 @@ export default function NotesClient({ user }: { user: User }) {
                                 >
                                   {note.is_shared ? "Shared" : "Share"}
                                 </Label>
-                                <Switch
-                                  id={`share-event-${note.id}`}
-                                  checked={!!note.is_shared}
-                                  onCheckedChange={(checked) =>
-                                    handleToggleShare(note, checked)
-                                  }
-                                  disabled={
-                                    !currentSpaceId ||
-                                    !partnerId ||
-                                    !!note.is_shared
-                                  }
-                                />
+                                <AlertDialog
+                                  open={isShareAlertDialogOpen[note.id] || false}
+                                  onOpenChange={(isOpen) => setIsShareAlertDialogOpen(prevState => ({ ...prevState, [note.id]: isOpen }))}
+                                >
+                                  <AlertDialogTrigger asChild>
+                                    <Switch
+                                      id={`share-event-${note.id}`}
+                                      checked={!!note.is_shared}
+                                      onCheckedChange={(checked) => handleToggleShare(note, checked)}
+                                      disabled={!currentSpaceId || !partnerId || !!note.is_shared}
+                                    />
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Share Event</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to share &quot;{note.title}&quot; with your partner?
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => confirmShareNote(note)}>
+                                        Share
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             )}
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteNote(note.id)}
-                            >
-                              <Trash2 className="size-4 mr-1" /> Delete
-                            </Button>
+                            <AlertDialog open={isDeleteDialogOpen && noteToDelete?.id === note.id} onOpenChange={setIsDeleteDialogOpen}>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteNote(note.id)} // This will now set the state and open the dialog
+                                >
+                                  <Trash2 className="size-4 mr-1" /> Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the event
+                                    <span className="font-semibold"> &quot;{noteToDelete?.title}&quot; </span>
+                                    and remove its data from our servers.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={confirmDeleteNote}>
+                                    Continue
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         )}
                       </Card>

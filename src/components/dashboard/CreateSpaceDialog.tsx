@@ -18,6 +18,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 type CreateSpaceDialogProps = {
   currentUserId: string;
@@ -80,7 +86,7 @@ export function CreateSpaceDialog({
         throw new Error(data?.error || "Failed to create space");
 
       setCreatedSpaceId(data.space.id);
-      console.log("🆔 Created spaceId:", data.space.id); 
+      console.log("🆔 Created spaceId:", data.space.id);
       toast.success("Space created successfully!");
       // onSpaceCreated?.(data.space.id);
     } catch (error: unknown) {
@@ -150,21 +156,21 @@ export function CreateSpaceDialog({
   const shareSpace = async () => {
     if (!createdSpaceId) return;
 
-  const shareText = `Join my space using this ID: ${createdSpaceId}`;
+    const shareText = `Join my space using this ID: ${createdSpaceId}`;
 
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: "Join My Space",
-        text: shareText,
-      });
-    } else {
-      await navigator.clipboard.writeText(shareText);
-      toast.success("Space ID copied for sharing!");
-    }
-  } catch (error) {
-    console.error("Share failed:", error);
-    toast.error("Could not share");
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Join My Space",
+          text: shareText,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        toast.success("Space ID copied for sharing!");
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+      toast.error("Could not share");
     }
   };
 
@@ -283,14 +289,23 @@ export function CreateSpaceDialog({
                   readOnly
                   className="font-mono text-sm"
                 />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={copySpaceId}
-                  className="shrink-0"
-                >
-                  <Copy className="size-4" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={copySpaceId}
+                        className="shrink-0"
+                      >
+                        <Copy className="size-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy Space ID</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 

@@ -158,6 +158,7 @@ function getGravatarUrl(email: string) {
 export async function createUserProfile(user: SupabaseUser) {
   const supabase = await createClient();
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: existingUser, error: fetchError } = await supabase
     .from('users')
     .select('*')

@@ -73,3 +73,18 @@ CREATE POLICY "Users can access shared notes where they are involved" ON shared_
     from_user_id = auth.uid ()
     OR to_user_id = auth.uid ()
 );
+
+CREATE TABLE
+    feedback (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+        user_id UUID REFERENCES users (id) ON DELETE CASCADE,
+        name TEXT,
+        email TEXT,
+        rating INT,
+        message TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW ()
+    );
+
+ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can access their own feedback" ON feedback USING (user_id = auth.uid());

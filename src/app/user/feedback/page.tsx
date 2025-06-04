@@ -1,4 +1,4 @@
-// This is a Server Component
+
 import { getCurrentUser } from "@/utils/user";
 import { redirect } from "next/navigation";
 import FeedbackClient from "@/components/feedback/FeedbackClient";
