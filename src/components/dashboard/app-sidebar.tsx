@@ -20,6 +20,12 @@ import {
 import { NavSecondary } from "./nav-secondary";
 import { Calendar } from "../ui/calendar";
 import { createClient } from "@/utils/supabase/client";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const staticData = {
   navMain: [
@@ -51,6 +57,7 @@ export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSi
     email: string;
     avatar: string;
   } | null>(null);
+  const [hasSpaces, setHasSpaces] = React.useState(false);
   
   React.useEffect(() => {
     const getUserData = async () => {
@@ -81,6 +88,16 @@ export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSi
             avatar: profileData.avatar_url || '',
           });
         }
+
+        // Check if user has any spaces
+        const { data: spacesData, error: spacesError } = await supabase
+          .from('spaces')
+          .select('id')
+          .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
+
+        if (!spacesError && spacesData) {
+          setHasSpaces(spacesData.length > 0);
+        }
       } else {
         console.error("❌ No user ID found", error);
       }
@@ -90,6 +107,14 @@ export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSi
   }, [supabase]);
 
   if (!userId || !userData) return null;
+
+  // Filter nav items based on whether user has spaces
+  const navMainItems = hasSpaces ? staticData.navMain : staticData.navMain.map(item => ({
+    ...item,
+    disabled: true,
+    title: item.title,
+    tooltip: "Join a space to enable this feature"
+  }));
 
   return (
     <Sidebar {...props}>
@@ -104,7 +129,9 @@ export function AppSidebar({ user, selectedDate, onDateSelect, ...props }: AppSi
             if (date) onDateSelect(format(date, "yyyy-MM-dd"));
           }}
         />
-        <NavMain items={staticData.navMain} />
+        <TooltipProvider>
+          <NavMain items={navMainItems} />
+        </TooltipProvider>
       </SidebarContent>
       <SidebarFooter>
         <NavSecondary items={staticData.navSecondary} />

@@ -132,6 +132,9 @@ interface UserMetadata {
   family_name?: string;
   last_name?: string;
   avatar_url?: string;
+  picture?: string;
+  name?: string;
+  full_name?: string;
 }
 
 interface SupabaseUser {
@@ -166,53 +169,59 @@ export async function createUserProfile(user: SupabaseUser) {
     return;
   }
 
-  // Determine initial avatar_url (Gravatar or OAuth provider's avatar)
-  const initialAvatarUrl = user.user_metadata?.avatar_url || (user.email ? getGravatarUrl(user.email) : null);
+  // Extract name from user metadata
+  const metadata = user.user_metadata || {};
+  let firstName = '';
+  let lastName = '';
 
-  if (!existingUser) {
-    // Create new user profile
-    const { error: insertError } = await supabase
-      .from('users')
-      .upsert([{
-        id: user.id,
-        email: user.email,
-        username: user.user_metadata?.preferred_username || user.user_metadata?.user_name || user.email?.split('@')[0],
-        first_name: user.user_metadata?.given_name || user.user_metadata?.first_name || '',
-        last_name: user.user_metadata?.family_name || user.user_metadata?.last_name || '',
-        avatar_url: initialAvatarUrl,
-        created_at: new Date().toISOString()
-      }], { onConflict: 'id' });
-
-    if (insertError) {
-      console.error('Error creating user profile:', insertError);
-    } else {
-      console.log('User profile created successfully');
-    }
-  } else {
-    // Update existing user profile if needed
-    const updates: UserUpdates = {};
-    
-    if (!existingUser.first_name && user.user_metadata?.given_name) {
-      updates.first_name = user.user_metadata.given_name;
-    }
-    if (!existingUser.last_name && user.user_metadata?.family_name) {
-      updates.last_name = user.user_metadata.family_name;
-    }
-    if (!existingUser.avatar_url && initialAvatarUrl) {
-        updates.avatar_url = initialAvatarUrl;
-    }
-    
-    if (Object.keys(updates).length > 0) {
-      const { error: updateError } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('Error updating user profile:', updateError);
-      }
-    }
+  // Try to get name from Google metadata
+  if (metadata.given_name) {
+    firstName = metadata.given_name;
+    lastName = metadata.family_name || '';
+  } else if (metadata.name) {
+    const nameParts = metadata.name.split(' ');
+    firstName = nameParts[0] || '';
+    lastName = nameParts.slice(1).join(' ') || '';
+  } else if (metadata.full_name) {
+    const nameParts = metadata.full_name.split(' ');
+    firstName = nameParts[0] || '';
+    lastName = nameParts.slice(1).join(' ') || '';
   }
+
+  // If no name found, use email prefix
+  if (!firstName) {
+    firstName = user.email?.split('@')[0] || 'User';
+  }
+
+  // Determine initial avatar_url (Gravatar or OAuth provider's avatar)
+  const initialAvatarUrl = metadata.avatar_url || metadata.picture || (user.email ? getGravatarUrl(user.email) : null);
+
+  const userProfile = {
+    id: user.id,
+    email: user.email,
+    username: metadata.preferred_username || metadata.user_name || user.email?.split('@')[0],
+    first_name: firstName,
+    last_name: lastName,
+    avatar_url: initialAvatarUrl,
+    created_at: new Date().toISOString()
+  };
+
+  console.log('Creating/updating user profile:', userProfile);
+
+  const { error: insertError } = await supabase
+    .from('users')
+    .upsert([userProfile], { 
+      onConflict: 'id',
+      ignoreDuplicates: false 
+    });
+
+  if (insertError) {
+    console.error('Error creating user profile:', insertError);
+    return null;
+  }
+
+  console.log('User profile created/updated successfully');
+  return userProfile;
 }
 
 export async function updateProfileDetails(formData: FormData) {

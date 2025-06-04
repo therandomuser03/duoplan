@@ -13,6 +13,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export function NavMain({
   items,
@@ -22,6 +27,8 @@ export function NavMain({
     url: string
     icon?: LucideIcon
     isActive?: boolean
+    disabled?: boolean
+    tooltip?: string
     items?: {
       title: string
       url: string
@@ -40,12 +47,28 @@ export function NavMain({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  <Link href={item.url} className="flex items-center gap-2">
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarMenuButton 
+                      tooltip={item.title}
+                      disabled={item.disabled}
+                      className={item.disabled ? "opacity-50 cursor-not-allowed" : ""}
+                    >
+                      <Link 
+                        href={item.url} 
+                        className={`flex items-center gap-2 ${item.disabled ? "pointer-events-none" : ""}`}
+                      >
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </TooltipTrigger>
+                  {item.tooltip && (
+                    <TooltipContent>
+                      <p>{item.tooltip}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
               </CollapsibleTrigger>
             </SidebarMenuItem>
           </Collapsible>

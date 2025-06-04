@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import DashboardTimeHeader from "@/components/dashboard/DashboardTimeHeader";
@@ -16,21 +16,36 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { createClient } from "@/utils/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 export default function DashboardPageWrapper() {
   const [selectedDate, setSelectedDate] = useState(
     () => new Date().toISOString().split("T")[0]
   );
   const [refreshKey, setRefreshKey] = useState(0);
+  const [hasSpaces, setHasSpaces] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const supabase = createClient();
 
-  // You may need to fetch user in a useEffect or pass as prop if SSR
-  // For now, let's assume user is available as a global or context
-  // If not, you can move this logic to a server component and pass user as prop
-  // const user = ...
+  useEffect(() => {
+    const checkUserSpaces = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user?.id) {
+        setUserId(user.id);
+        const { data: spacesData } = await supabase
+          .from('spaces')
+          .select('id')
+          .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
+        
+        setHasSpaces(Boolean(spacesData?.length));
+      }
+    };
 
-  // Placeholder for user fetching logic
-  // Replace with your actual user fetching logic
-  const user = { name: "", email: "", avatar: "" };
+    checkUserSpaces();
+  }, [supabase]);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
@@ -38,7 +53,7 @@ export default function DashboardPageWrapper() {
 
   return (
     <SidebarProvider>
-      <AppSidebar user={user} selectedDate={""} onDateSelect={() => {}} />
+      <AppSidebar user={{ name: "", email: "", avatar: "" }} selectedDate={""} onDateSelect={() => {}} />
       <SidebarInset className="flex flex-col h-screen overflow-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
@@ -57,9 +72,18 @@ export default function DashboardPageWrapper() {
         </header>
         <DashboardTimeHeader onRefresh={handleRefresh} />
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0 overflow-hidden">
+          {!hasSpaces && (
+            <Alert className="mb-4">
+              <InfoIcon className="h-4 w-4" />
+              <AlertTitle>No Spaces Joined</AlertTitle>
+              <AlertDescription>
+                You haven't joined any spaces yet. Join a space to start creating and sharing events.
+              </AlertDescription>
+            </Alert>
+          )}
           <DashboardContent 
             key={refreshKey}
-            user={user} 
+            user={{ name: "", email: "", avatar: "" }} 
             selectedDate={selectedDate} 
             onDateChange={setSelectedDate} 
           />

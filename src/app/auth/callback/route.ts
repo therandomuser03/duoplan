@@ -20,17 +20,25 @@ export async function GET(request: NextRequest) {
 
     if (!error && data.user) {
       console.log('User authenticated successfully:', data.user.email)
+      console.log('User metadata:', data.user.user_metadata)
 
       // Create or update user profile in database
       try {
-        await createUserProfile({
+        const userProfile = await createUserProfile({
           id: data.user.id,
           email: data.user.email ?? '',
           user_metadata: data.user.user_metadata,
         })
-        console.log('User profile created/updated')
+        
+        if (!userProfile) {
+          console.error('Failed to create user profile')
+          return NextResponse.redirect(`${origin}/error?message=Failed to create user profile`)
+        }
+        
+        console.log('User profile created/updated successfully:', userProfile)
       } catch (profileError) {
         console.error('Error creating user profile:', profileError)
+        return NextResponse.redirect(`${origin}/error?message=Error creating user profile`)
       }
 
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
