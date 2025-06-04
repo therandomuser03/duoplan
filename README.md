@@ -7,7 +7,9 @@
 
 **DuoPlan** is a minimalist, real-time shared planner designed for two people. Collaborate on schedules, notes, and plans — all in one intuitive interface.
 
-![DuoPlan Preview](public/preview.png)
+![DuoPlan Preview](https://github.com/user-attachments/assets/411bf783-38f5-4caa-b938-c05a09b48a04)
+
+![DuoPlan Preview](https://github.com/user-attachments/assets/452276fb-8796-4ce2-bec6-72ba7022816f)
 
 ## ✨ Features
 
@@ -94,6 +96,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_public_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # only used server-side
 (for other keys check the `.env.example` file)
+
 # Optional: Analytics and Monitoring
 NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id
 ```
@@ -185,6 +188,7 @@ This project is licensed under the **MIT License**. See the `LICENSE` file for d
 * [Tailwind CSS](https://tailwindcss.com/)
 * [shadcn/ui](https://ui.shadcn.com/)
 * [Lucide](https://lucide.dev/)
+* [Magic UI](https://magicui.design/)
 
 ## 🐛 Troubleshooting
 
@@ -209,7 +213,6 @@ This project is licensed under the **MIT License**. See the `LICENSE` file for d
 
 - Open an issue on GitHub
 - Check the [Supabase documentation](https://supabase.com/docs)
-- Join our [Discord community](https://discord.gg/duoplan)
 
 ## 🤝 Contributing
 
@@ -229,5 +232,3 @@ We welcome contributions! Please follow these steps:
 - Add tests for new features
 - Update documentation as needed
 - Ensure all tests pass before submitting PR
-
-```
