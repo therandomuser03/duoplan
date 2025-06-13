@@ -1,3 +1,6 @@
+> ⚠️ *Currently under active development. Contributions, feedback, and stars are always appreciated!*
+---
+
 # DuoPlan
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.3-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
